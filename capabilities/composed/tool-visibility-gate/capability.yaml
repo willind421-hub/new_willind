@@ -1,0 +1,23 @@
+id: tool-visibility-gate
+title: Caller별 도구 노출 제어
+version: 0.1.0
+purpose: >
+  Hide or block dangerous tools from low-trust callers before execution is even
+  considered.
+runtime_role: permission_visibility_boundary
+permission_tier:
+  default: policy_gate
+implementation:
+  helper: ai_tool/backend/services/permission_gateway.py
+  functions:
+    - owner_is_admin_or_single_user
+    - is_public_blocked_tool
+    - blocked_tools_for_owner
+outputs:
+  - visible_tools
+  - blocked_tools
+  - block_reason
+do_not:
+  - map_callers_to_legacy_roles
+  - expose_shell_or_file_write_to_low_trust_callers
+status: runtime_helper_connected

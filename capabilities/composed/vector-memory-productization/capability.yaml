@@ -1,0 +1,19 @@
+id: vector-memory-productization
+title: 벡터 메모리 제품화
+version: 0.1.0
+purpose: >
+  Extend vector memory toward pin, session view, import/export, audit, dedup,
+  and suggestion states without changing file-based personal memory.
+runtime_role: memory_store_contract
+permission_tier:
+  default: T2_trace_required
+inputs:
+  - ai_tool/backend/services/memory_store.py
+outputs:
+  - memory_suggestion
+  - memory_audit
+  - session_memory_view
+do_not:
+  - edit_file_based_MEMORY_md
+  - auto_save_llm_extraction_without_review
+status: contract_registered

@@ -1,0 +1,63 @@
+contract: willind.monitor_service
+version: 0.1.0
+updated: 2026-05-28
+
+service:
+  id: willind-monitor
+  display_name: Willind Monitor
+  kind: deterministic_ops_monitor
+  status: planned_available
+  owner_scope: Monitor/Projects/Worktree
+
+definition: >
+  willind-monitor is the deterministic operations wrapper that combines
+  Service Supervisor status, Error Inbox read-only log scan, Willind Body Health,
+  and Command Center health command availability into one PM2-scheduled monitor
+  entry.
+
+boundaries:
+  starts_services: false
+  stops_services: false
+  deletes_files: false
+  reads_secret_files: false
+  command_center_health_execution: disabled_in_smoke
+  existing_project_db: ""
+
+components:
+  service_supervisor:
+    project: "<your-backend>"
+    command: ""
+    mode: read_only
+  error_inbox:
+    project: "<your-backend>"
+    command: ""
+    mode: read_only
+  willind_body_health:
+    registry: registry/services/willind-body-health.yaml
+    command: ""
+    mode: read_only
+  command_center_health:
+    wrapper: scripts/operations/command-center/monitor-command-center-health.ps1
+    target: scripts/operations/command-center/command-center-health.ps1
+    mode: dry_run_by_default
+    note: direct health script can read .env, so smoke validates wrapper wiring only.
+
+entrypoints:
+  runner: python scripts/operations/monitor/willind_monitor_runner.py --mode once --json
+  dry_run: python scripts/operations/monitor/willind_monitor_runner.py --mode dry-run --json
+  smoke: python scripts/operations/monitor/smoke-willind-monitor.py
+  pm2_config: scripts/operations/monitor/willind-monitor.pm2.config.cjs
+
+pm2:
+  app_name: willind-monitor
+  start_policy: manual_registration_only
+  registration_command: pm2 start scripts/operations/monitor/willind-monitor.pm2.config.cjs
+  dry_run_validation: node -e "const c=require('./scripts/operations/monitor/willind-monitor.pm2.config.cjs'); if(!c.apps?.length) process.exit(1)"
+  actual_start_performed: false
+
+outputs:
+  latest_json: runtime/monitor/willind-monitor/latest.json
+  logs: runtime/monitor/willind-monitor/logs
+
+docs:
+

@@ -1,0 +1,457 @@
+contract: willind.skill_hub
+version: 0.1.8
+updated: 2026-06-05
+
+purpose: >
+  Unify external skill sources, Willind composed capabilities, provider runners,
+  hook timing, permission policy, and storage routing into one read-only
+  selection registry. This file does not execute tools. It only tells Willind
+  which skill pieces should be considered for a user intent.
+
+
+principles:
+  registry_is_spine: true
+  autonomy_default_allow_until_harm_boundary: true
+  internal_external_location_is_not_the_primary_boundary: true
+  imported_source_is_not_live_behavior: true
+  preserve_external_source_layout: true
+  wrap_external_sources_with_adapter_contract_or_composed_capability: true
+  load_only_relevant_skill_pieces: true
+  provider_is_replaceable_runner_not_identity: true
+  permission_gate_overrides_provider_and_skill: true
+  observation_proposal_draft_preparation_allowed_by_default: true
+  safe_execution_and_public_network_allowed_with_trace: true
+  pre_payment_cart_and_reservation_allowed_with_trace: true
+  final_payment_or_order_confirmation_requires_strong_confirmation: true
+  private_data_secret_money_payment_needed_file_delete_are_danger_boundaries: true
+  external_send_requires_content_sensitivity_classification: true
+  execution_delete_external_send_payment_account_change_require_gate: true
+  skill_pieces_can_enter_mid_work: true
+  material_work_must_be_recorded_before_closeout: true
+  retrieved_content_is_untrusted_data: true
+  dangerous_tool_visibility_is_filtered_by_caller: true
+
+concepts:
+  imported_skill:
+    registry: ""
+    storage_root: capabilities/imported
+    rule: 원본 구조는 보존하고 live 행동으로 직접 연결하지 않는다.
+  skill_adapter:
+    registry: registry/skills/skill-hub.yaml
+    storage_root: capabilities/adapters
+    rule: 외부 구조를 Willind 입출력 계약으로 얇게 감싼다.
+  composed_capability:
+    registry: registry/hooks/skill-routing.yaml
+    storage_root: capabilities/composed
+    rule: Willind가 실제로 선택하는 능력 단위다.
+  provider_runner:
+    registry: registry/providers/skill-provider-routing.yaml
+    rule: Codex, Claude, Gemini, local, browser, API 모델의 읽기/실행/검토 역할을 나눈다.
+  hook_rule:
+    registry: registry/hooks/skill-routing.yaml
+    rule: 같은 스킬도 intent, planning, 실행 전, 실행 후, 오류 복구 시점에 다르게 들어갈 수 있다.
+  permission_rule:
+    registry: registry/permissions/permission-gate-policy.yaml
+    rule: 권한은 lifecycle 기준으로 정하고 위험 작업은 자동 실행하지 않는다.
+  storage_rule:
+    registry:
+      - registry/files/file-routing-policy.yaml
+      - registry/files/path-tags.yaml
+      - core/kernel/kernel-routing.yaml
+    rule: 결과물은 의미 단위로 묶고 runtime, output, reference, raw data를 분리한다.
+  skill_profile:
+    registry: registry/skills/skill-hub.yaml
+    rule: 특정 상황에서 필요한 capability, provider policy, hook, permission, storage를 묶은 선택 단위다.
+  skill_bundle:
+    registry: registry/skills/skill-hub.yaml
+    rule: 반복 업무에서 여러 skill_profile을 순서 있게 조합한다.
+  session_record_closeout:
+    registry:
+      - registry/kernel/baseline-rules.yaml
+      - registry/hooks/skill-routing.yaml
+    storage_root:
+      - docs/chat-log
+      - docs/history
+    rule: 작업자가 바뀌어도 중요한 작업, 검증, 결정, 후속 위험은 중복 없이 일일 장부에 남긴다.
+
+canonical_hook_lifecycle:
+  intent_detect:
+    description: 사용자의 발화나 이벤트를 보고 상황과 능력 후보를 잡는다.
+    aliases: [intent_detected]
+  planning:
+    description: 실행 전에 목표, 범위, 비용, 위험, 작업 순서를 정리한다.
+    aliases: [context_load, pre_model]
+  pre_execution:
+    description: 실제 변경 가능성이 있는 작업 직전 권한과 dry-run 가능성을 본다.
+    aliases: [pre_tool]
+  execution_review:
+    description: 모델이나 도구가 낸 실행 후보가 허용된 형태인지 검토한다.
+    aliases: [post_model, pre_tool]
+  post_execution:
+    description: 실행 결과, 테스트, 산출물, 오류를 정리한다.
+    aliases: [post_tool]
+  memory_update:
+    description: 반복 패턴, 결정, 산출물 경로, 후속 할 일을 기록한다.
+    aliases: [post_tool, shutdown_archive]
+  error_recovery:
+    description: 실패 원인, 재시도 정책, 차단 또는 회복 경로를 정한다.
+    aliases: [error]
+
+provider_loading_policies:
+  codex_only:
+    description: 작은 구현, 테스트, repo 검증은 Codex만 읽어도 된다.
+    primary_runner: codex_cli
+    may_read: [coding-lite, bounded-experiment-loop, external-skill-absorption, permission-review]
+    avoid_loading: [long_business_strategy, broad_design_reference]
+  claude_review_only:
+    description: 구조 검토, 방향 수정, 비판, 위험 판단만 Claude에 맡긴다.
+    primary_runner: claude_cli
+    may_read: [architecture-review, business-review, permission-review]
+    avoid_loading: [large_repo_execution_trace]
+  gemini_research:
+    description: 영상, 이미지, 유튜브, 넓은 웹 자료는 Gemini 또는 browser 계열을 우선한다.
+    primary_runner: gemini_api_or_browser
+    may_read: [research-synthesis, visual-ui-review]
+    avoid_loading: [private_raw_data_without_redaction]
+  local_possible:
+    description: 반복 분류, 개인 데이터 초안, 사소한 태깅은 로컬/규칙 기반으로 먼저 처리한다.
+    primary_runner: local_llm
+    may_read: [permission-review, research-synthesis]
+    avoid_loading: [high_stakes_final_reasoning]
+  api_required:
+    description: 현재 로컬/구독 CLI로 처리하기 어려운 고품질 추론이나 외부 API 기능이 필요할 때만 쓴다.
+    primary_runner: openai_api
+    may_read: [architecture-review, research-synthesis, business-review, bounded-experiment-loop]
+    avoid_loading: [payment_or_secret_without_redaction]
+  opencode_runner:
+    description: OpenCode 계열 CLI는 코딩 실행자 후보로만 읽고, 실제 실행은 Action Runtime과 Permission Gate 이후로 둔다.
+    primary_runner: opencode_cli
+    may_read: [coding-lite, coding-harness, local-ide-terminal-bridge, permission-review]
+    avoid_loading: [global_identity_prompt, payment_or_external_send_context, private_raw_data_without_redaction]
+  openhands_workspace:
+    description: OpenHands 계열 workspace/runtime은 격리 개발 작업장 참고로만 읽고 container/remote 실행은 승인 뒤로 둔다.
+    primary_runner: openhands_workspace
+    may_read: [coding-harness, local-ide-terminal-bridge, agent-safety-gate, permission-review]
+    avoid_loading: [workspace_credentials, remote_runtime_config_without_gate, direct_issue_tool_write]
+  common:
+    description: provider가 바뀌어도 동일하게 유지되는 Willind 계약 요약이다.
+    primary_runner: willind_ai_rules
+    may_read: [permission-review]
+    avoid_loading: [provider_specific_prompt_body]
+
+skill_profiles:
+  - id: bounded_experiment_loop
+    title: 고정 예산 실험 루프
+    trigger_examples: ["실험 돌려봐", "여러 후보를 반복해서 개선해줘", "metric으로 비교해줘", "밤새 개선 후보 돌려봐", "자동 실험으로 개선해줘"]
+    trigger_keywords: [실험, "실험 돌려", 반복, "반복해서 개선", "개선 후보", "성능 개선", metric, 메트릭, 지표, 밤새, "후보 돌려", "keep/discard", "고정 예산", autoresearch, auto-research]
+    capabilities: [bounded-experiment-loop, permission-review]
+    provider_policy: codex_only
+    hooks: [intent_detect, planning, pre_execution, post_execution, memory_update, error_recovery]
+    permission_lifecycle: execution
+    storage_rule: runtime_trace
+    source_refs: [karpathy_autoresearch_external]
+    notes: generic 조사/리서치 발화를 독점하지 않는다. 목표, metric, 예산, stop condition이 있는 반복 개선 요청에서만 선택한다.
+
+  - id: external_skill_absorption
+    title: 외부 스킬 구조 판정과 Willind식 흡수
+    trigger_examples: ["이 스킬 흡수해줘", "외부 스킬 구조 보고 분류해줘", "이 플러그인을 Willind식으로 연결해줘", "원본 구조 파악하고 맞게 흡수해줘"]
+    trigger_keywords: ["스킬 흡수", "외부 스킬", 플러그인, "원본 구조", "구조 파악", "스킬 분류", "capabilities/imported", adapter, 어댑터, composed, registry]
+    capabilities: [external-skill-absorption, permission-review]
+    provider_policy: codex_only
+    hooks: [intent_detect, planning, pre_execution, execution_review, post_execution, memory_update, error_recovery]
+    permission_lifecycle: proposal
+    storage_rule: composed_capability
+    source_refs: [composio_awesome_claude_skills, karpathy_autoresearch_external, superpowers_external_methodology]
+    notes: 이름으로 분류하지 않고 source_kind, runtime_shape, live_behavior_risk를 먼저 본 뒤 imported/adapter/composed 위치를 정한다.
+
+  - id: small_code_bug
+    title: 작은 코드 버그 수정
+    trigger_examples: ["작은 코드 버그 고쳐줘", "이 코드 짜줘", "테스트 실패 고쳐줘", "lint 수정"]
+    trigger_keywords: [코드, "코드 짜", 코딩, 짜줘, 구현, 버그, 오류, 에러, 테스트, lint, 빌드, 고쳐]
+    capabilities: [coding-lite]
+    provider_policy: codex_only
+    hooks: [intent_detect, planning, pre_execution, post_execution, error_recovery]
+    permission_lifecycle: execution
+    storage_rule: runtime_trace
+    source_refs: [superpowers_external_methodology]
+    notes: 단일 파일/소규모 수정은 Codex 중심으로 가고 구조 검토는 필요할 때만 추가한다.
+
+  - id: architecture_review
+    title: 구조 설계 검토
+    trigger_examples: ["구조가 맞는지 검토해줘", "폴더 구조 판단", "provider 갈아끼워도 흔들리지 않게"]
+    trigger_keywords: [구조, 설계, 척추, registry, 레지스트리, provider, 검토, 폴더]
+    capabilities: [architecture-review, permission-review]
+    provider_policy: claude_review_only
+    hooks: [intent_detect, planning, execution_review, memory_update]
+    permission_lifecycle: proposal
+    storage_rule: reference
+    source_refs: [gstack_external_role_pipeline]
+    notes: 실행보다 판단과 정렬이 핵심이다.
+
+  - id: market_research
+    title: 시장 조사와 근거 수집
+    trigger_examples: ["조사해줘", "리서치해줘", "찾아봐", "시장 조사해줘", "돈 벌 가능성 찾아줘", "벤치마킹해줘"]
+    trigger_keywords: [시장, 조사, 리서치, 찾아봐, 검색, 벤치마킹, 수익, 돈, 가격, 고객, 외주]
+    capabilities: [research-synthesis, business-review, permission-review]
+    provider_policy: gemini_research
+    hooks: [intent_detect, planning, post_execution, memory_update]
+    permission_lifecycle: observation
+    storage_rule: reference
+    source_refs: [karpathy_llm_wiki_pattern]
+    notes: 관찰과 제안은 자동 가능하지만 광고 집행, 구매, 외부 전송은 별도 확인이 필요하다.
+
+  - id: image_generation
+    title: 이미지 생성 (제4층 도구 image.generate)
+    trigger_examples: ["이미지 만들어줘", "그림 그려줘", "썸네일 만들어줘", "사진 생성해줘", "이 프롬프트로 이미지 뽑아줘", "이미지 생성해줘"]
+    trigger_keywords: [이미지, 그림, 썸네일, 일러스트, 사진생성, 이미지생성, 그려줘]
+    capabilities: [app-action-draft, permission-review]
+    provider_policy: claude_review_only
+    hooks: [intent_detect, planning, pre_execution, post_execution]
+    permission_lifecycle: draft
+    storage_rule: composed_capability
+    notes: >
+      제4층 도구 image.generate(services/fourth_floor_tools.py)로 실행, action_runtime ACTION=generate_image.
+      1차 mock(키 없이 Pillow placeholder PNG, 외부호출·돈 없음). 라이브 Gemini(Nano Banana)는 유료라 permission gate 통과 후.
+
+  - id: screenshot_ui_judgement
+    title: 스샷 기반 UI 판단
+    trigger_examples: ["스샷 보고 UI 판단해줘", "창이 찌그러져", "다크모드 시안색"]
+    trigger_keywords: [스샷, 화면, UI, ui, 창, 패널, 디자인, 시각, 찌그러져]
+    capabilities: [visual-ui-review, research-synthesis]
+    provider_policy: gemini_research
+    hooks: [intent_detect, planning, post_execution, memory_update]
+    permission_lifecycle: proposal
+    storage_rule: uiux_reference
+    source_refs: [typeui_design_skills, nvidia_verified_agent_skills]
+    notes: 이미지 판단과 구현은 분리한다. 구현은 별도 coding-lite로 넘어간다.
+
+  - id: planning_idea_expansion
+    title: 기획 아이디어 확장
+    trigger_examples: ["이런 생각하고 있는데 어떻게 생각해?", "이거 어떻게 생각해?", "이 아이디어 어때?", "기획 아이디어 확장해줘", "이 아이디어 가능성 넓혀줘"]
+    trigger_keywords: [생각, "어떻게 생각", 어때, 고민, 기획, 아이디어, 확장, 경우의수, 굴절, 브레인스토밍]
+    capabilities: [business-review, architecture-review, research-synthesis]
+    provider_policy: claude_review_only
+    hooks: [intent_detect, planning, execution_review, memory_update]
+    permission_lifecycle: proposal
+    storage_rule: reference
+    source_refs: [superpowers_external_methodology, gstack_external_role_pipeline]
+    notes: 질문을 길게 던지기보다 후보를 먼저 깔고 필요하면 긴 분석 모드로 전환한다.
+
+  - id: idea_to_seed_convergence
+    title: 넓은 아이디어를 실행 가능한 seed로 수렴
+    trigger_examples: ["이 아이디어를 작업 가능한 형태로 바꿔줘", "기획부터 실행까지 정리해줘", "처음부터 끝까지 만들려면 뭐가 필요해?", "이런 생각 있는데 어떻게 생각해?", "웹사이트나 디지털 상품으로 무언가 팔고 싶은데 방향을 모르겠어", "AI나 컴퓨터 안에서 만들 수 있는 상품 아이디어를 구체화하고 싶어", "팩, 템플릿, 스킬팩 같은 디지털 상품을 만들 수 있을지 보고 싶어"]
+    trigger_keywords: [아이디어, 기획, 처음부터, 끝까지, seed, 명세, 질문, 인터뷰, 애매, 수렴, 요구사항, 실행계획, 온라인으로, 팔아보고, "팔고 싶", "뭘 팔", "뭐 팔", 웹사이트, "컴퓨터 안에서", "디지털 상품", 스킬샵, "스킬 샵", 스킬팩, "AI 팩", "팩 판매", "팩을 만들", "AI가 대세", 막연, 구체화]
+    capabilities: [idea-to-spec-convergence, business-review, research-synthesis, permission-review]
+    provider_policy: claude_review_only
+    hooks: [intent_detect, planning, pre_execution, execution_review, post_execution, memory_update, error_recovery]
+    permission_lifecycle: proposal
+    storage_rule: reference
+    source_refs: [gstack_external_role_pipeline, superpowers_external_methodology]
+    notes: 넓고 애매한 온라인 판매/AI 상품/팩/스킬샵 요청은 조사 후보를 먼저 깔고, 8-12개의 적극적 인터뷰 질문으로 선호를 끌어낸 뒤 seed 문서, provider/workroom route, 평가 기준으로 바꾼다. 빠른 수정과 일상 대화에는 적용하지 않는다.
+
+  - id: app_purchase_preparation
+    title: 앱 행동과 구매 준비
+    trigger_examples: ["결제 직전까지만 준비해줘", "상품 후보 찾아줘", "티켓 후보 정리해줘"]
+    trigger_keywords: [결제 직전, 직전까지만, 준비, 후보, 비교, 가격, 쇼핑, 티켓, 예매, 예약]
+    capabilities: [app-action-draft, permission-review, research-synthesis]
+    provider_policy: common
+    hooks: [intent_detect, planning, pre_execution, execution_review, post_execution]
+    permission_lifecycle: preparation
+    storage_rule: runtime_trace
+    source_refs: [composio_awesome_claude_skills, harness_engineering_external]
+    notes: 후보 조사, 비교, 입력값 준비, 결제 직전 요약, 결제 전 화면 준비까지 가능하다. 실제 주문 확정과 결제 제출은 payment 생명주기로 넘긴다.
+
+  - id: cart_or_reservation_gate
+    title: 장바구니와 예약 홀드
+    trigger_examples: ["장바구니에 담아줘", "장바구니 담기 전에 확인 받아", "티케팅 해놔줘"]
+    trigger_keywords: [장바구니, 담아, 담기, 예약, 예매, 티케팅, 좌석, 홀드]
+    capabilities: [app-action-draft, permission-review, research-synthesis]
+    provider_policy: common
+    hooks: [intent_detect, planning, pre_execution, execution_review, post_execution]
+    permission_lifecycle: cart_or_reservation
+    storage_rule: runtime_trace
+    source_refs: [composio_awesome_claude_skills, harness_engineering_external]
+    notes: 장바구니 담기, 좌석 홀드, 예약 후보 저장은 결제 전 단계로 보고 trace_required로 허용한다. 실제 주문/예매/결제 확정은 payment_request에서 강한 확인을 받는다.
+
+  - id: payment_request
+    title: 결제와 구매 확정
+    trigger_examples: ["상품 사줘", "바로 구매해줘", "결제해줘"]
+    trigger_keywords: [사줘, 구매, 결제, 바로 구매, 결제해, 송금, 계좌이체, 구독, 광고 집행]
+    capabilities: [app-action-draft, permission-review, research-synthesis]
+    provider_policy: common
+    hooks: [intent_detect, planning, pre_execution, execution_review, post_execution, memory_update]
+    permission_lifecycle: payment
+    storage_rule: runtime_trace
+    source_refs: [composio_awesome_claude_skills, harness_engineering_external]
+    notes: 결제, 구매 확정, 송금, 유료 구독은 강한 확인 없이는 절대 실행하지 않는다.
+
+  - id: account_change_request
+    title: 계정 변경 요청
+    trigger_examples: ["계정 비밀번호 바꿔줘", "로그인 설정 바꿔줘", "권한 변경해줘"]
+    trigger_keywords: [계정, 비밀번호, 로그인, 권한, 설정, 변경]
+    capabilities: [permission-review, app-action-draft]
+    provider_policy: common
+    hooks: [intent_detect, planning, pre_execution, execution_review, error_recovery]
+    permission_lifecycle: account_change
+    storage_rule: runtime_trace
+    source_refs: [composio_awesome_claude_skills, nvidia_verified_agent_skills]
+    notes: 계정 변경은 관찰과 절차 설명까지만 자동 가능하다. 실제 변경은 기본 차단 또는 강한 확인 대상이다.
+
+  - id: external_email_send
+    title: 메일과 외부 전송
+    trigger_examples: ["메일 보내줘", "답장 보내줘", "외부로 전송해줘"]
+    trigger_keywords: [메일, 보내줘, 전송, 답장, 업로드, 게시, 댓글, DM, 디엠]
+    capabilities: [app-action-draft, permission-review]
+    provider_policy: common
+    hooks: [intent_detect, planning, pre_execution, execution_review, post_execution]
+    permission_lifecycle: external_send
+    storage_rule: runtime_trace
+    source_refs: [composio_awesome_claude_skills, harness_engineering_external]
+    notes: 초안 작성은 가능하지만 실제 전송은 수신자, 내용, 공개 범위 확인이 필요하다.
+
+  - id: file_delete
+    title: 삭제 요청
+    trigger_examples: ["이 파일 삭제해", "폴더 지워", "기록 제거"]
+    trigger_keywords: [삭제, 지워, 제거, 날려, 비워]
+    capabilities: [permission-review]
+    provider_policy: common
+    hooks: [intent_detect, pre_execution, execution_review, post_execution, error_recovery]
+    permission_lifecycle: delete
+    storage_rule: runtime_trace
+    source_refs: [harness_engineering_external]
+    notes: 대상 목록과 영향 범위를 먼저 보여준다. 원본/secret/history 삭제는 기본적으로 더 엄격하다.
+
+  - id: mid_coding_brainstorm
+    title: 코딩 중간 브레인스토밍
+    trigger_examples: ["코딩 중간에 다시 브레인스토밍해줘", "구현하다 막혔어 방향 다시 보자"]
+    trigger_keywords: [브레인스토밍, 막혔어, 다시, 방향, 코딩, 구현]
+    capabilities: [architecture-review, coding-lite]
+    provider_policy: claude_review_only
+    hooks: [planning, execution_review, memory_update]
+    permission_lifecycle: proposal
+    storage_rule: runtime_trace
+    source_refs: [superpowers_external_methodology]
+    notes: 같은 작업 중간에도 필요한 순간만 planning lens를 다시 끼울 수 있다.
+
+  - id: design_with_code_review
+    title: 디자인 작업 중 코드 검토
+    trigger_examples: ["디자인 작업 중 코드 검토도 같이 해줘", "UI 판단하고 구현도 봐줘"]
+    trigger_keywords: [디자인, UI, ui, 코드, 검토, 구현, 프론트]
+    capabilities: [visual-ui-review, coding-lite, architecture-review]
+    provider_policy: gemini_research
+    hooks: [intent_detect, planning, pre_execution, post_execution]
+    permission_lifecycle: proposal
+    storage_rule: uiux_reference
+    source_refs: [typeui_design_skills, superpowers_external_methodology]
+    notes: 시각 판단, 코드 구현, 구조 검토를 한 provider에 몰아넣지 않는다. 디자인 taste(토큰·페르소나)는 활성 provider의 디자인 능력이 공급.
+
+  - id: ui_build_with_taste
+    title: 디자인 시스템 선언하며 UI 빌드
+    trigger_examples: ["랜딩페이지 만들어줘", "히어로 섹션 디자인해", "이쁘게 UI 만들어", "시안 뽑아줘", "디자인 시스템 잡아줘"]
+    trigger_keywords: [랜딩, 히어로, 디자인, 시안, UI, ui, 페이지, 컴포넌트, 만들, 화면, 프론트, 폰트, 색, 팔레트]
+    capabilities: [visual-ui-review, coding-lite]
+    provider_policy: gemini_research
+    hooks: [intent_detect, planning, pre_execution, post_execution]
+    permission_lifecycle: proposal
+    storage_rule: uiux_reference
+    source_refs: [typeui_design_skills]
+    notes: 디자인 생성은 운영자 직접 판단. taste=활성 provider 디자인 능력, 검토=visual-ui-review, 구현만 coding-lite. 시스템선언→토큰→실브라우저검증→측정비평 순서 강제.
+
+  - id: quick_school_question
+    title: 학교 질문 빠른 답변
+    trigger_examples: ["학교 질문 빠르게 찾아줘", "과제 질문 빠르게"]
+    trigger_keywords: [학교, 과제, 질문, 빠르게, 시험, 수업]
+    capabilities: [research-synthesis]
+    provider_policy: local_possible
+    hooks: [intent_detect, planning, post_execution]
+    permission_lifecycle: observation
+    storage_rule: reference
+    source_refs: [karpathy_llm_wiki_pattern]
+    notes: 빠른 답변을 우선하고 깊은 검증은 필요할 때만 확장한다.
+
+  - id: long_business_strategy
+    title: 사업 전략 긴 분석
+    trigger_examples: ["사업 전략은 길게 분석해줘", "비즈니스 관점으로 길게"]
+    trigger_keywords: [사업, 전략, 길게, 분석, 고객, 가격, 시장, 수익]
+    capabilities: [business-review, research-synthesis, architecture-review]
+    provider_policy: claude_review_only
+    hooks: [intent_detect, planning, execution_review, memory_update]
+    permission_lifecycle: proposal
+    storage_rule: reference
+    source_refs: [gstack_external_role_pipeline]
+    notes: 사용자이 길게 분석하라고 한 경우에는 짧은 질문 모드보다 구조화된 긴 판단을 허용한다.
+
+  - id: session_record_closeout
+    title: 세션 종료 전 작업 기록
+    trigger_examples: ["챗로그 적어둬", "히스토리에 남겨", "보고서 남겨", "오늘 한 작업 기록해", "기록 자동으로 남겨"]
+    trigger_keywords: [챗로그, 히스토리, 기록, 보고서, closeout, session, "작업 기록", "남겨", "적어"]
+    capabilities: [session-record-closeout]
+    provider_policy: codex_only
+    hooks: [post_execution, memory_update]
+    permission_lifecycle: draft
+    storage_rule: reference
+    source_refs: [provider_bootstrap_baseline_rules]
+    notes: 중요한 작업과 durable decision은 chat-log/history에 중복 없이 남긴다. 비밀값과 private raw는 쓰지 않는다.
+
+skill_bundles:
+  codex_implementation_claude_review:
+    title: Codex 구현 + Claude 구조 검토
+    profiles: [small_code_bug, architecture_review]
+    sequence: [codex_implementation, claude_review_when_structure_or_risk_changes]
+    permission_lifecycle: execution
+    storage_rule: runtime_trace
+  external_skill_preserved_willind_usage:
+    title: 외부 스킬 원본 보존 + Willind식 능력 사용
+    profiles: [external_skill_absorption, idea_to_seed_convergence, planning_idea_expansion, mid_coding_brainstorm, design_with_code_review, bounded_experiment_loop]
+    sequence: [read_inventory_summary, select_composed_capability, avoid_source_rewrite]
+    permission_lifecycle: proposal
+    storage_rule: reference
+  idea_to_seed_to_execution:
+    title: 아이디어 인터뷰 + seed 문서 + 실행/평가 준비
+    profiles: [idea_to_seed_convergence, architecture_review, small_code_bug]
+    sequence: [clarify_only_needed_questions, write_seed_targets, choose_provider_or_workroom, evaluate_with_tests]
+    permission_lifecycle: proposal
+    storage_rule: reference
+  bounded_experiment_until_decision:
+    title: 고정 예산 실험 루프 + 판단
+    profiles: [bounded_experiment_loop, market_research, long_business_strategy]
+    sequence: [define_scope_metric_budget, collect_or_prepare_baseline, run_small_attempts, keep_or_discard, summarize_decision]
+    permission_lifecycle: execution
+    storage_rule: runtime_trace
+  app_action_until_confirmation:
+    title: 앱 행동은 결제 전까지 준비
+    profiles: [app_purchase_preparation, cart_or_reservation_gate, payment_request, account_change_request, external_email_send, file_delete]
+    sequence: [observe, propose, draft, prepare_until_payment_boundary, require_strong_gate_for_final_payment]
+    permission_lifecycle: payment
+    storage_rule: runtime_trace
+  record_material_work_closeout:
+    title: 중요한 작업 마무리 기록
+    profiles: [session_record_closeout]
+    sequence: [check_duplicate_section, append_chat_log, append_history, report_paths]
+    permission_lifecycle: draft
+    storage_rule: reference
+
+selection_policy:
+  choose_profile_by:
+    - capability_overlap
+    - lifecycle_match
+    - trigger_keyword_match
+    - intent_candidate_match
+  fallback_profile: planning_idea_expansion
+  max_profiles_without_workflow: 2
+  if_multiple_profiles_match:
+    rule: choose_highest_permission_risk_then_highest_keyword_score
+  mid_work_insert_rule:
+    brainstorming: use_only_when_direction_is_unclear_or_user_requests
+    review: use_before_structural_or_risky_changes
+    debugging: use_after_failed_test_or_error_trace
+    research: use_when_current_or_external_evidence_is_needed
+    safety_review: use_before_side_effect_or_unclear_permission
+
+runtime_contract:
+  output_field: skill_hub
+  read_only: true
+  would_execute: false
+  expected_consumers:
+    - core/kernel/skill_kernel_resolver.py
+

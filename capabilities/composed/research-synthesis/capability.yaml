@@ -1,0 +1,67 @@
+id: research-synthesis
+version: 0.1.0
+status: active_contract
+purpose: >
+  Collect and synthesize references into source-grounded conclusions, options,
+  discard lists, and Willind-ready decisions.
+when_to_use:
+  - external_reference_research
+  - provider_benchmark_summary
+  - uiux_reference_synthesis
+  - technical_or_official_docs_comparison
+  - community_signal_summary
+when_not_to_use:
+  - private_secret_review
+  - direct_purchase_or_booking
+  - coding_implementation_without_research_need
+input_contract:
+  required:
+    - research_question
+  optional:
+    - source_types
+    - languages
+    - recency_requirement
+    - output_format
+output_contract:
+  required:
+    - source_list
+    - key_findings
+    - applicable_ideas
+    - discard_ideas
+    - confidence_and_gaps
+hook_timing:
+  - intent_detected
+  - pre_model
+  - post_tool
+  - scheduled
+permission_tier:
+  default: T1_research
+  auto_allowed:
+    - observation
+    - proposal
+    - draft
+  requires_confirmation:
+    - login_session_access
+    - screenshot_of_user_visible_private_context
+    - external_send
+  blocked_without_explicit_approval:
+    - captcha_bypass
+    - private_content_access
+provider_preferences:
+  primary: browser_session
+  reviewers:
+    - gemini_api_or_browser
+    - claude_cli
+  fallback:
+    - openai_api
+    - local_llm
+  notes: Browser and multimodal routes are preferred for current public references.
+storage_policy:
+  raw_sources: references
+  screenshots: references/uiux
+  traces: runtime/traces
+tests_or_validation:
+  - source_urls_or_local_source_paths_required
+  - separate_fact_from_inference
+  - mark_currentness_when_time_sensitive
+

@@ -1,0 +1,84 @@
+contract: willind.connector.common_envelope
+version: 0.1.0
+updated: 2026-06-14
+
+connector:
+  id: common-envelope
+  display_name: Common Connector Envelope
+  kind: connector_policy
+  priority: P0
+  status: active_available
+  owner_scope: registry_connector_spine
+
+purpose: >
+  Define the shared shape every external connector slot must expose before it
+  becomes executable. The envelope separates read, draft, write, send, delete,
+  and payment so Action Runtime and Permission Gate can reason about risk.
+
+required_fields:
+  - read
+  - draft
+  - write
+  - send
+  - delete
+  - payment
+  - secret_env_names
+  - permission_required
+
+default_lifecycle_map:
+  read: observation
+  draft: draft
+  write: execution
+  send: external_send
+  delete: delete
+  payment: payment
+
+default_permissions:
+  read: allow
+  draft: allow
+  write: trace_required
+  send: confirm
+  delete: confirm_or_block
+  payment: strong_confirm
+
+runtime_contract:
+  registry_entry_executable: false
+  action_runtime_required_for_execution: true
+  permission_gate_required_for_side_effects: true
+  external_send_preflight_required_for_send: true
+  secret_broker_required_for_auth: true
+  untrusted_context_required_for_retrieved_text: true
+
+preflight_payload_shape:
+  fields:
+    - connector_id
+    - operation
+    - lifecycle
+    - target_kind
+    - destination
+    - subject
+    - content_preview
+    - attachment_metadata
+    - caller
+    - dry_run_only
+    - visibility
+    - content_origin
+    - metadata
+  attachment_boundary: metadata_only
+  secret_value_read: false
+
+safety:
+  no_secret_values_in_registry: true
+  no_api_call_from_registry: true
+  no_external_send_from_registry: true
+  no_payment_from_registry: true
+  no_account_change_from_registry: true
+  strictest_policy_wins: true
+
+verification:
+  parse_yaml: all registry/connectors/*.yaml files must parse
+  runtime_enablement_requires:
+    - connector-specific smoke test
+    - Permission Gate mapping
+    - redacted audit trace
+    - secret key-name audit only

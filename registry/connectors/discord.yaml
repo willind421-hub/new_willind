@@ -1,0 +1,49 @@
+contract: willind.connector.discord
+version: 0.1.0
+updated: 2026-06-14
+
+connector:
+  id: discord
+  display_name: Discord
+  kind: chat_connector
+  priority: P2
+  status: planned_disabled
+  owner_scope: communication_and_notifications
+
+read:
+  status: planned_disabled
+  permission_required: allow
+  notes: MCP bot contains inbound message handling.
+draft:
+  status: planned_disabled
+  permission_required: allow
+  notes: Discord message candidates may be drafted locally.
+write:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Channel or remote state mutation is not a default action.
+send:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Mirror or notification sends pass preflight.
+delete:
+  status: planned_disabled
+  permission_required: confirm_or_block
+  notes: Message deletion is not part of current default connector.
+payment:
+  status: blocked
+  permission_required: blocked
+  notes: Discord billing or boosts are outside this connector.
+
+secret_env_names:
+  - DISCORD_BOT_TOKEN
+  - DISCORD_CHANNEL_MAP
+  - DISCORD_WEBHOOK_URL
+
+permission_required:
+  read: allow
+  draft: allow
+  write: confirm
+  send: confirm
+  delete: confirm_or_block
+  payment: blocked

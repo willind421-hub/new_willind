@@ -1,0 +1,123 @@
+contract: willind.input.routing
+version: 0.1.3
+updated: 2026-05-31
+
+
+routes:
+  wake:
+    sources:
+    classes:
+      - wake_only
+      - wake_command
+      - rejected_noise
+      - degraded_backend
+    fallback: stt_fallback
+
+  dashboard_chat:
+    sources:
+    event_contracts:
+      - wait_for_message
+      - send_message
+      - get_topic_messages
+      - save_topic_message
+      - save_topic_summary
+    classes:
+      - conversation
+      - execution_command
+      - topic_message
+      - approval_required
+      - idle_noop
+    wait_loop:
+      owner: dashboard_adapter
+      receive: wait_for_message
+      respond: send_message
+      idle_return:
+        empty_array_count: 6
+        interval_seconds: 30
+        total_seconds: 180
+        user_visible_message: false
+      legacy_fields:
+        from_role: message_source_channel
+        to_role: message_target_channel
+        note: legacy department column names remain for compatibility only.
+    topic_messages:
+      prefix_pattern: "[토픽:<name>]"
+      read_history: get_topic_messages
+      save_user_message: save_topic_message
+      save_assistant_message: save_topic_message
+      summarize_after_messages: 30
+
+  mobile_chat:
+    sources:
+    event_contracts:
+      - willind:second-floor-wake
+      - willind:intent-text
+    classes:
+      - conversation
+      - execution_command
+    policy:
+      default_renderer: mobile_conversation
+      voice_ui_default: disabled
+      typed_text_is_deliberate: true
+
+  telegram_gateway:
+    sources:
+    classes:
+      - conversation
+      - execution_command
+      - approval_required
+      - blocked
+      - unauthorized
+      - error
+    policy:
+      typed_text_is_deliberate: true
+      do_not_apply_voice_noise_rejection: true
+      conversation_first: true
+      action_candidate_requires_skill_kernel_and_permission_gate: true
+      allowed_chat_safe_candidates_can_autorun: true
+      long_safe_work_opens_visible_cli_debate_room: true
+      gateway_remains_operator: true
+      focus_transfer_to_cli: false
+      followup_route:
+        primary: telegram_reply_to_room_message
+        storage: telegram_room_links
+        api: /api/cli-debate/rooms/{room_id}/user-message
+      unsafe_lifecycles_stay_gated:
+        - payment
+        - delete
+        - external_send
+        - account_change
+        - secret_or_credential_send
+
+attachments:
+  resolver_owner: input_adapter
+  note: >
+    Every entry surface should route screenshots, uploaded files, browser
+    captures, and explicit local paths through an attachment resolver before
+    intent execution. ROLE.md keeps only the behavior summary.
+  sources:
+    dashboard_uploads:
+      patterns:
+        - /api/files/<hash>_<filename>
+        - <your-backend>/uploads/<hash>_<filename>
+      owner: dashboard_backend
+    local_paths:
+      patterns:
+        - "C:/Users/USERNAME/Downloads/*"
+        - "C:/Users/USERNAME/Pictures/*"
+        - "C:/new_willind/capture/*"
+      owner: active_runner
+      rule: open_only_when_user_provides_path_or_attachment
+    telegram_files:
+      owner: telegram_gateway
+      rule: download_metadata_first; file bytes only after policy allows
+  failure_response: 첨부 경로를 찾지 못했습니다.
+
+guards:
+  general_chat_never_executes_directly: true
+  external_input_executes_directly: false
+  payment_delete_account_change_require_gate_or_block: true
+  no_secret_values_in_contracts: true
+  typed_chat_should_not_be_rejected_as_voice_noise: true
+  ambiguous_text_defaults_to_conversation_not_market_research: true
+

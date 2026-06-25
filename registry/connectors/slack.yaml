@@ -1,0 +1,50 @@
+contract: willind.connector.slack
+version: 0.1.0
+updated: 2026-06-14
+
+connector:
+  id: slack
+  display_name: Slack
+  kind: team_chat_connector
+  priority: P2
+  status: planned_disabled
+  owner_scope: communication
+
+read:
+  status: planned_disabled
+  permission_required: allow
+  notes: Channel and message reading may be added after scope review.
+draft:
+  status: planned_disabled
+  permission_required: allow
+  notes: Message drafts and summaries are local-only.
+write:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Reactions, channel changes, or remote drafts are account-visible.
+send:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Posting a Slack message requires preflight.
+delete:
+  status: planned_disabled
+  permission_required: confirm_or_block
+  notes: Deleting messages or files is destructive.
+payment:
+  status: blocked
+  permission_required: blocked
+  notes: Workspace billing and plan changes are not allowed here.
+
+secret_env_names:
+  - SLACK_BOT_TOKEN
+  - SLACK_APP_TOKEN
+  - SLACK_SIGNING_SECRET
+  - SLACK_WEBHOOK_URL
+
+permission_required:
+  read: allow
+  draft: allow
+  write: confirm
+  send: confirm
+  delete: confirm_or_block
+  payment: blocked

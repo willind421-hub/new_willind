@@ -1,0 +1,78 @@
+contract: willind.usage_tracker_service
+version: 0.1.1
+updated: 2026-06-03
+
+service:
+  id: usage-tracker
+  display_name: Willind Usage Tracker
+  kind: usage_ledger
+  status: planned_available
+  port: 18105
+  project: "<your-backend>"
+
+purpose: >
+  Record provider, skill, API, terminal, task, and device usage as durable
+  local events. Subscription resets create period boundaries; raw usage events
+  are not deleted. Dashboard-facing summaries expose compact Korean account,
+  quota, official-limit, cost, and error fields without exposing raw event noise.
+
+boundaries:
+  reads_secret_files: false
+  deletes_usage_events_on_reset: false
+  estimates_cli_tokens_when_provider_does_not_report: true
+  api_cost_estimates_require_pricing_config: true
+  official_quota_metadata_is_manual_or_imported_snapshot: true
+  official_quota_metadata_must_not_read_provider_credentials: true
+
+entrypoints:
+  cli_summary: python -m willind_usage_tracker.cli summary --period week
+  terminal_summary: python -m willind_usage_tracker.cli terminal --period today
+  reset_period: python -m willind_usage_tracker.cli reset --label "manual reset"
+  api: python -m willind_usage_tracker.cli serve --host 127.0.0.1 --port 18105
+  smoke: python scripts/smoke.py
+
+storage:
+  default_db: data/usage/willind-usage.db
+  config: "<your-backend>/config/billing.json"
+
+summary_contract:
+  grouped_account_fields:
+    - id
+    - display_name
+    - billing_type
+    - records
+    - subscription_units
+    - quota_units
+    - quota_unit
+    - quota_percent
+    - official_usage_limits
+    - api_cost_krw
+    - errors
+  official_usage_limits:
+    allowed_fields:
+      - id
+      - label
+      - remaining_percent
+      - reset_label
+      - observed_at
+    source: billing_config_or_future_safe_importer
+    raw_provider_token_allowed: false
+  dashboard_surface:
+    consumer: "<your-backend>"
+    user_facing_panel: "<your-frontend>"
+    display_policy:
+      - show Korean account name and quota percent when available
+      - show official remaining limits only as compact current-period hints
+      - show API cost and error count
+      - keep raw event counts and estimated token noise out of the primary display
+
+api_hub:
+  service_id: usage-tracker
+  aliases:
+    - /usage/health
+    - /usage/summary
+    - /usage/periods
+    - /usage/events
+    - /usage/reset
+
+tests: []

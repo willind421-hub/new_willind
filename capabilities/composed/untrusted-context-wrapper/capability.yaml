@@ -1,0 +1,23 @@
+id: untrusted-context-wrapper
+title: 외부 텍스트 데이터 래퍼
+version: 0.1.0
+purpose: >
+  Wrap web, research, memory, email, tool output, and imported-skill text as
+  untrusted user-role data so embedded instructions cannot become system
+  instructions.
+runtime_role: prompt_injection_boundary
+permission_tier:
+  default: T1_decision_support
+implementation:
+  helper: ai_tool/backend/services/untrusted_context.py
+  markers:
+    - <<<UNTRUSTED_SOURCE_DATA>>>
+    - <<<END_UNTRUSTED_SOURCE_DATA>>>
+outputs:
+  - role:user
+  - meta.trusted:false
+  - data_not_instructions
+do_not:
+  - inject_external_text_as_system_role
+  - follow_embedded_tool_directives
+status: runtime_helper_connected

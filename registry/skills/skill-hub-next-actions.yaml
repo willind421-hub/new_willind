@@ -1,0 +1,182 @@
+contract: willind.skill_hub.next_actions
+version: 0.1.0
+updated: 2026-05-27
+
+purpose: >
+  Track the ten safe follow-up lanes after AutoResearch was reclassified as a
+  bounded experiment loop. This registry tells Action Runtime and future
+  Dashboard surfaces which lanes can create local review artifacts now, and
+  which parts must wait for explicit Permission Gate approval.
+
+
+principles:
+  local_artifact_first: true
+  no_external_side_effect_from_summary: true
+  permission_gate_before_execution: true
+  registry_is_spine: true
+  runtime_artifacts_are_evidence_not_final_output: true
+
+tracks:
+  - order: 1
+    id: skill_hub_usage_expansion
+    title: Skill Hub 실제 사용 확장
+    action_runtime_safe_action: summarize_skill_hub_usage_expansion
+    registry_refs:
+      - registry/skills/skill-hub.yaml
+      - registry/hooks/skill-routing.yaml
+      - registry/providers/skill-provider-routing.yaml
+    dashboard_surface: skillHubDecision
+    safe_now:
+      - selected skill profile summary
+      - provider loading preview
+      - hook and storage explanation
+    confirm_or_block:
+      - external skill execution
+      - paid provider loop
+
+  - order: 2
+    id: scoped_experiment_runner
+    title: Scoped Experiment Runner
+    action_runtime_safe_action: draft_scoped_experiment_runner
+    registry_refs:
+      - capabilities/composed/bounded-experiment-loop/capability.yaml
+      - registry/permissions/permission-gate-policy.yaml
+    dashboard_surface: permissionLive
+    safe_now:
+      - runner contract draft
+      - metric, budget, stop condition draft
+      - keep/discard/defer record shape
+    confirm_or_block:
+      - long-running loop
+      - paid provider repetition
+      - browser login session
+
+  - order: 3
+    id: permission_gate_policy_expansion
+    title: Permission Gate 정책 확장
+    action_runtime_safe_action: draft_permission_policy_expansion
+    registry_refs:
+      - registry/permissions/permission-gate-policy.yaml
+    dashboard_surface: permissionLive
+    safe_now:
+      - policy draft
+      - risk tier wording
+      - confirmation text preview
+    confirm_or_block:
+      - live policy override change
+      - account setting change
+      - payment action
+
+  - order: 4
+    id: dashboard_surface_cleanup
+    title: Dashboard 표시 정리
+    action_runtime_safe_action: summarize_dashboard_signal_surfaces
+    registry_refs:
+      - registry/skills/skill-hub.yaml
+      - registry/tools/tool-slot-index.yaml
+    dashboard_surface: primaryDetail
+    safe_now:
+      - surface responsibility summary
+      - panel-to-decision mapping
+      - human-readable selected skill display
+    confirm_or_block:
+      - major layout rewrite
+      - Electron release build
+
+  - order: 5
+    id: cli_workroom_hardening
+    title: CLI 작업방 / 코딩모드 고도화
+    action_runtime_safe_action: draft_cli_workroom_hardening
+    registry_refs:
+    dashboard_surface: codingMode
+    safe_now:
+      - workroom identity contract
+      - provider pair routing
+      - resume index plan
+    confirm_or_block:
+      - process start or stop
+      - external provider launch
+
+  - order: 6
+    id: provider_benchmark_router
+    title: Provider Benchmark Router
+    action_runtime_safe_action: summarize_provider_benchmark_router
+    registry_refs:
+      - registry/providers/skill-provider-routing.yaml
+    dashboard_surface: providerRouter
+    safe_now:
+      - benchmark source list
+      - routing rule summary
+      - cost/performance boundary
+    confirm_or_block:
+      - paid benchmark run
+      - API key or subscription change
+
+  - order: 7
+    id: memory_personalization_ingest
+    title: Memory / 개인화 데이터 정리
+    action_runtime_safe_action: draft_personalization_memory_ingest
+    registry_refs:
+      - registry/data/data-catalog.yaml
+      - registry/permissions/permission-gate-policy.yaml
+    dashboard_surface: memoryCore
+    safe_now:
+      - ingest stage draft
+      - redaction checklist
+      - profile update boundary
+    confirm_or_block:
+      - new personal export import
+      - training dataset release
+
+  - order: 8
+    id: source_of_truth_routing
+    title: 파일/데이터 Source of Truth
+    action_runtime_safe_action: audit_source_of_truth_routing
+    registry_refs:
+      - registry/_index.yaml
+      - registry/files/file-routing-policy.yaml
+      - registry/data/data-catalog.yaml
+    dashboard_surface: dataGovernance
+    safe_now:
+      - route audit
+      - owner project rule check
+      - runtime artifact classification
+    confirm_or_block:
+      - live DB migration
+      - raw data deletion
+      - history rewrite
+
+  - order: 9
+    id: monitoring_sentinel
+    title: Monitoring / Sentinel
+    action_runtime_safe_action: draft_monitoring_sentinel
+    registry_refs:
+    dashboard_surface: systemHealth
+    safe_now:
+      - polling contract
+      - threshold rules
+      - alert escalation plan
+    confirm_or_block:
+      - 24-hour AI loop
+      - external notification send
+      - service restart
+
+  - order: 10
+    id: multimodal_response_director
+    title: Multimodal Response Director
+    action_runtime_safe_action: draft_multimodal_response_director
+    registry_refs:
+      - registry/hooks/skill-routing.yaml
+    dashboard_surface: responseDirector
+    safe_now:
+      - visual/audio/text lane split
+      - response surface selection
+      - browser panel trigger draft
+    confirm_or_block:
+      - camera or microphone expansion
+      - external content upload
+
+runtime_contract:
+  action_runtime_module: "<your-backend>/services/action_runtime.py"
+  action_runtime_artifact_type: local_review_artifact
+  verification_script: scripts/operations/skills/verify-skill-hub-next-actions.py

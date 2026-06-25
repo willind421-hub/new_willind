@@ -1,0 +1,74 @@
+contract: willind.croncreate_envelope_service
+version: 0.1.0
+updated: 2026-06-02
+
+purpose: >
+  Provide one read-only CronCreate-style candidate envelope for date memo,
+  reminder, calendar event, and service cron requests. Reuse existing
+  scheduler surfaces instead of creating a second scheduler engine.
+
+api:
+  backend:
+    - /api/scheduler/croncreate-envelope
+    - /api/scheduler/croncreate-envelope/queue
+    - /api/scheduler/croncreate-envelope/examples
+
+owner:
+  project: "<your-backend>"
+  service: ""
+  router: ""
+  action_runtime:
+    local_schedule: ""
+    service_cron_request: ""
+
+surfaces_wrapped:
+  - id: local_schedule_db
+    path: ""
+  - id: async_scheduler
+    path: ""
+  - id: time_actions
+    path: ""
+  - id: cron_jobs
+    path: ""
+
+decision:
+  create_new_scheduler_engine: false
+  canonical_direction: reuse_existing_croncreate_stack
+  reason: >
+    Date and time requests should become traced candidates over existing
+    Willind schedule, reminder, and service-cron surfaces. The envelope does
+    not execute, delete, send externally, or change accounts.
+
+runtime_bridge:
+  queue_api: /api/scheduler/croncreate-envelope/queue
+  action_types:
+    local_schedule: create_schedule_from_croncreate_envelope
+    service_cron_request: request_service_cron_change
+  writes:
+    - local_schedule_db
+  allowed_intents:
+    - reminder
+    - calendar_event
+    - date_memo
+  approval_candidate_intents:
+    - service_cron
+  blocked_or_refused_intents:
+    - unknown
+  execution_boundary: >
+    The queue API creates an Action Runtime job only for local schedule rows.
+    The job writes to the schedule store only when the envelope does not
+    require approval. Service cron requests create approval-gated Action
+    Runtime candidates only; they do not mutate the scheduler config,
+    services, or project files. Payment, external send, destructive delete,
+    and account boundary requests remain blocked or refused here.
+
+permission:
+  unknown_or_conversation: safe_read
+  create_date_memo_candidate: trace_required
+  create_reminder_candidate: trace_required
+  create_calendar_event_candidate: trace_required
+  create_service_cron_candidate: trace_required
+  external_send_or_payment_or_delete_or_account_boundary: needs_approval
+
+tests:
+  - ""

@@ -1,0 +1,50 @@
+contract: willind.cli_session_manager_service
+version: 0.1.0
+updated: 2026-05-26
+
+service:
+  id: cli-session-manager
+  display_name: Willind CLI Session Manager
+  project: "<your-project-path>"
+  kind: local_metadata_service
+  status: planned_available
+
+entrypoints:
+  cli: python -m cli_session_manager.cli
+  api: cli_session_manager.api:app
+  smoke: "<your-smoke-script>"
+
+api:
+  default_host: 127.0.0.1
+  default_port: 8784
+  health: /health
+  status: /status
+
+storage:
+  default_state_dir: "<your-state-dir>"
+  runtime_state_file: sessions.json
+  data_domains:
+    - workrooms
+    - provider_sessions
+    - worktree_refs
+    - bootstrap_metadata
+    - inbox_outbox_refs
+    - resume_metadata
+    - status
+
+guards:
+  starts_external_cli_processes: false
+  resume_requires_exact_room_id: true
+  resume_requires_exact_session_id: true
+  same_pair_id_does_not_override_room_scope: true
+  blocked_metadata_markers:
+    - .env
+    - .secrets
+    - token
+    - credential
+    - password
+    - billing
+    - account
+    - delete
+
+docs:

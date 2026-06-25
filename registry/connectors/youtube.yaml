@@ -1,0 +1,50 @@
+contract: willind.connector.youtube
+version: 0.1.0
+updated: 2026-06-14
+
+connector:
+  id: youtube
+  display_name: YouTube
+  kind: video_platform_connector
+  priority: P3
+  status: planned_disabled
+  owner_scope: media_publishing
+
+read:
+  status: planned_disabled
+  permission_required: allow
+  notes: Search, play, transcript, and dry-run automation support exist.
+draft:
+  status: planned_disabled
+  permission_required: allow
+  notes: Upload metadata, description, and schedule candidates may be drafted.
+write:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Metadata update and upload are external account actions.
+send:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Upload, update metadata, and schedule publish require preflight.
+delete:
+  status: planned_disabled
+  permission_required: strong_confirm_or_block
+  notes: Video deletion or channel cleanup is not a default connector action.
+payment:
+  status: blocked
+  permission_required: blocked
+  notes: Paid promotion or channel monetization changes are not allowed here.
+
+secret_env_names:
+  - YOUTUBE_OAUTH_CLIENT_FILE
+  - YOUTUBE_TOKEN_PATH
+  - GOOGLE_CREDENTIALS_PATH
+  - GOOGLE_OAUTH_CLIENT_FILE
+
+permission_required:
+  read: allow
+  draft: allow
+  write: confirm
+  send: confirm
+  delete: strong_confirm_or_block
+  payment: blocked

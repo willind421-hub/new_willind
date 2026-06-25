@@ -1,0 +1,250 @@
+contract: willind.skill_routing
+version: 0.1.1
+updated: 2026-06-02
+
+purpose: >
+  Map situations and hook timings to Willind composed capabilities. This file
+  selects capability candidates only; provider choice and permission decisions
+  are handled by their own registry files.
+
+
+global_rules:
+  registry_is_spine: true
+  imported_sources_are_never_direct_runtime_policy: true
+  load_only_relevant_capability_summary: true
+  obvious_safe_judgment_is_agent_responsibility: true
+  ask_only_when_risk_or_real_preference_split_requires_it: true
+  permission_gate_overrides_skill_route: true
+
+capability_registry:
+  coding-lite: capabilities/composed/coding-lite/capability.yaml
+  architecture-review: capabilities/composed/architecture-review/capability.yaml
+  business-review: capabilities/composed/business-review/capability.yaml
+  research-synthesis: capabilities/composed/research-synthesis/capability.yaml
+  bounded-experiment-loop: capabilities/composed/bounded-experiment-loop/capability.yaml
+  external-skill-absorption: capabilities/composed/external-skill-absorption/capability.yaml
+  idea-to-spec-convergence: capabilities/composed/idea-to-spec-convergence/capability.yaml
+  agent-gateway-runtime: capabilities/composed/agent-gateway-runtime/capability.yaml
+  app-action-draft: capabilities/composed/app-action-draft/capability.yaml
+  permission-review: capabilities/composed/permission-review/capability.yaml
+  visual-ui-review: capabilities/composed/visual-ui-review/capability.yaml
+  session-record-closeout: capabilities/composed/session-record-closeout/capability.yaml
+  mcp-runtime-state: capabilities/composed/mcp-runtime-state/capability.yaml
+  untrusted-context-wrapper: capabilities/composed/untrusted-context-wrapper/capability.yaml
+  provider-endpoint-probe: capabilities/composed/provider-endpoint-probe/capability.yaml
+  deep-research-lifecycle: capabilities/composed/deep-research-lifecycle/capability.yaml
+  tool-visibility-gate: capabilities/composed/tool-visibility-gate/capability.yaml
+  vector-memory-productization: capabilities/composed/vector-memory-productization/capability.yaml
+  swd-file-verification: capabilities/composed/swd-file-verification/capability.yaml
+  prod-data-guard: capabilities/composed/prod-data-guard/capability.yaml
+  runtime-firewall: capabilities/composed/runtime-firewall/capability.yaml
+  agent-cost-routing: capabilities/composed/agent-cost-routing/capability.yaml
+  skill-authoring-workflow: capabilities/composed/skill-authoring-workflow/capability.yaml
+
+hook_rules:
+  - id: quick_small_code_change
+    situation: Small bug, simple script fix, test failure, lint failure, or local compile issue.
+    trigger_examples:
+      - "이 오류 고쳐줘"
+      - "테스트 돌려줘"
+      - "단일 파일 수정"
+    hook_timing: [intent_detected, pre_model, pre_tool, post_tool]
+    capabilities: [coding-lite, swd-file-verification]
+    permission_hint: trace_required
+
+  - id: structure_or_folder_decision
+    situation: Folder structure, registry, kernel, provider independence, migration, or architectural tradeoff.
+    trigger_examples:
+      - "이 구조가 맞아?"
+      - "폴더 재정비"
+      - "provider 갈아끼워도 흔들리지 않게"
+    hook_timing: [intent_detected, context_load, pre_model, post_model]
+    capabilities: [architecture-review, permission-review]
+    permission_hint: decision_support
+
+  - id: idea_or_thinking_review
+    situation: User shares an idea, worry, direction, or rough thought and wants judgement without naming a formal brainstorming skill.
+    trigger_examples:
+      - "이런 생각하고 있는데 어떻게 생각해?"
+      - "이 아이디어 어때?"
+      - "이 방향 괜찮아?"
+    hook_timing: [intent_detected, context_load, pre_model, post_model]
+    capabilities: [business-review, architecture-review, research-synthesis]
+    permission_hint: decision_support
+
+  - id: money_or_business_opportunity
+    situation: Money opportunity, pricing, market validation, customer, landing copy, small business experiment, or a venture kickoff declaration ("X 하자/해보자/시작하자").
+    trigger_examples:
+      - "돈 벌 가능성 찾아줘"
+      - "가격표 만들어줘"
+      - "외주 실험 계획"
+      - "사업 해보자"
+      - "부업 시작하자"
+      - "이걸로 돈 벌어보자"
+      - "수익화 해보자"
+      - "제휴 마케팅 시작할래"
+    hook_timing: [intent_detected, pre_model, post_model, scheduled]
+    capabilities: [business-review, research-synthesis, permission-review]
+    permission_hint: guarded_business
+
+  - id: external_reference_research
+    situation: Public web, official docs, community, benchmark, UI reference, product, or provider research.
+    trigger_examples:
+      - "찾아봐"
+      - "벤치마킹해줘"
+      - "레퍼런스 모아줘"
+    hook_timing: [intent_detected, pre_model, post_tool]
+    capabilities: [research-synthesis]
+    permission_hint: research_safe
+
+  - id: bounded_experiment_loop
+    situation: Fixed-budget experiment, repeated improvement loop, metric comparison, or keep/discard candidate run.
+    trigger_examples:
+      - "실험 돌려봐"
+      - "여러 후보를 반복해서 개선해줘"
+      - "metric으로 비교해줘"
+      - "밤새 개선 후보 돌려봐"
+    hook_timing: [intent_detected, context_load, pre_model, pre_tool, post_tool, error, shutdown_archive]
+    capabilities: [bounded-experiment-loop, permission-review, agent-cost-routing]
+    permission_hint: trace_required_budgeted_loop
+
+  - id: external_skill_absorption
+    situation: External skill, plugin, repo, sourcebook, or MCP-like source must be classified by actual structure before Willind mapping.
+    trigger_examples:
+      - "이 스킬 흡수해줘"
+      - "외부 스킬 구조 보고 분류해줘"
+      - "이 플러그인을 Willind식으로 연결해줘"
+    hook_timing: [source_intake, intent_detected, context_load, pre_model, pre_tool, post_tool, error]
+    capabilities: [external-skill-absorption, permission-review, skill-authoring-workflow]
+    permission_hint: source_shape_first
+
+  - id: idea_to_seed_convergence
+    situation: Broad idea, vague online selling intent, AI/digital product request, skill-pack idea, automation goal, or large ambiguous task needs targeted clarification, source-backed options, and seed documents before execution.
+    trigger_examples:
+      - "이런 생각 있는데 어떻게 생각해?"
+      - "이거 처음부터 끝까지 만들려면 어떻게 가야 해?"
+      - "기획부터 실행까지 정리해줘"
+      - "이 아이디어를 작업 가능한 형태로 바꿔줘"
+      - "웹사이트나 디지털 상품으로 무언가 팔고 싶은데 방향을 모르겠어"
+      - "AI나 컴퓨터 안에서 만들 수 있는 상품 아이디어를 구체화하고 싶어"
+      - "팩, 템플릿, 스킬팩 같은 디지털 상품을 만들 수 있을지 보고 싶어"
+    hook_timing: [intent_detected, context_load, pre_model, pre_tool, post_tool, error, shutdown_archive]
+    capabilities: [idea-to-spec-convergence, business-review, research-synthesis, permission-review]
+    permission_hint: clarify_then_seed_before_execution
+
+  - id: app_or_browser_action_preparation
+    situation: Ticketing, shopping, calendar, email, messaging, web form, or external app action preparation.
+    trigger_examples:
+      - "티케팅 해놔줘"
+      - "결제 직전까지만 준비해줘"
+      - "장바구니 담기 전에 확인 받아"
+      - "메일 답장 초안"
+      - "후보 비교해서 준비해줘"
+    hook_timing: [intent_detected, pre_model, pre_tool, post_tool]
+    capabilities: [app-action-draft, permission-review]
+    permission_hint: external_action_draft
+
+  - id: permission_boundary_unclear
+    situation: Any action may write, delete, send externally, change account state, pay, or expose secrets.
+    trigger_examples:
+      - "삭제해"
+      - "보내줘"
+      - "결제해"
+      - "계정 설정 바꿔"
+    hook_timing: [post_model, pre_tool, post_tool, error]
+    capabilities: [permission-review, runtime-firewall, prod-data-guard]
+    permission_hint: strictest_policy_wins
+
+  - id: visual_or_ui_issue
+    situation: UI screenshot review, panel layout, density, readability, dark mode, motion, browser visual QA, design system declaration, building a page/hero/landing with taste.
+    trigger_examples:
+      - "스샷 봐"
+      - "창이 찌그러져"
+      - "다크모드 시안색"
+      - "랜딩페이지 이쁘게 만들어"
+      - "디자인 시스템 잡아줘"
+    hook_timing: [intent_detected, pre_model, post_tool, error]
+    capabilities: [visual-ui-review, research-synthesis]
+    permission_hint: visual_edit_trace
+
+  - id: compound_product_work
+    situation: Request combines planning, coding, UI, research, permission, and final output.
+    trigger_examples:
+      - "처음부터 끝까지 만들어줘"
+      - "테스트까지 완료해줘"
+      - "외주 프로젝트로 완성해줘"
+    hook_timing: [intent_detected, context_load, pre_model, pre_tool, post_tool, shutdown_archive]
+    capabilities:
+      - architecture-review
+      - research-synthesis
+      - coding-lite
+      - visual-ui-review
+      - permission-review
+    permission_hint: split_into_safe_steps
+
+  - id: session_record_closeout
+    situation: Material work, registry edits, provider routing changes, tests, operation docs, or durable decisions must be recorded before the session closes.
+    trigger_examples:
+      - "챗로그 적어둬"
+      - "히스토리에 남겨"
+      - "오늘 한 작업 기록해"
+      - "보고서 남겨"
+    hook_timing: [post_tool, post_execution, memory_update, shutdown_archive]
+    capabilities: [session-record-closeout]
+    permission_hint: local_record_safe_no_secret_values
+
+  - id: image_generation
+    situation: Request asks to generate, draw, or render an image, picture, thumbnail, or illustration from a text prompt — runs through the 4층 image.generate tool slot.
+    trigger_examples:
+      - "이미지 만들어줘"
+      - "그림 그려줘"
+      - "썸네일 만들어줘"
+      - "사진 생성해줘"
+      - "이미지 생성해줘"
+      - "이 프롬프트로 이미지 뽑아줘"
+    hook_timing: [intent_detected, context_load, pre_tool, post_tool]
+    capabilities:
+      - app-action-draft
+      - permission-review
+    permission_hint: image_generate_mock_safe
+
+  - id: text_generation
+    situation: Request asks to write, draft, summarize, or generate a text body from instructions — runs through the 4층 text.generate tool slot (Claude OAuth subscription CLI, no API key/cost).
+    trigger_examples:
+      - "글 써줘"
+      - "텍스트 만들어줘"
+      - "초안 써줘"
+      - "이거 정리해서 글로 써줘"
+      - "이 내용 본문 작성해줘"
+    hook_timing: [intent_detected, context_load, pre_tool, post_tool]
+    capabilities:
+      - app-action-draft
+      - permission-review
+    permission_hint: text_generate_claude_cli_safe
+
+  - id: web_search
+    situation: Request asks to search the web, look something up, or find current info — runs read-only through the 4층 browser.capture_readonly slot (DuckDuckGo, no key).
+    trigger_examples:
+      - "검색해줘"
+      - "찾아봐줘"
+      - "인터넷에 검색해줘"
+      - "이거 검색해서 알려줘"
+      - "최신 정보 찾아줘"
+    hook_timing: [intent_detected, context_load, pre_tool, post_tool]
+    capabilities:
+      - research-synthesis
+    permission_hint: read_only_public_web
+
+selection_policy:
+  max_primary_capabilities_without_reason: 3
+  if_more_than_three_needed: create_workflow_or_plan_first
+  repeated_skill_use: keep_same_capability_if_context_continues
+  skill_switching:
+    planning_to_coding: architecture-review -> coding-lite
+    coding_to_design: coding-lite -> visual-ui-review
+    research_to_action: research-synthesis -> app-action-draft -> permission-review
+    business_to_experiment: business-review -> app-action-draft -> permission-review
+  fallback:
+    unknown_intent: research-synthesis
+    unknown_permission: permission-review
+    unknown_provider: architecture-review

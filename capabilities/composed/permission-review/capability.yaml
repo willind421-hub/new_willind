@@ -1,0 +1,75 @@
+id: permission-review
+version: 0.1.0
+status: active_contract
+purpose: >
+  Classify risk and permission requirements for local tools, files, apps,
+  external sends, money actions, account changes, and deletion.
+when_to_use:
+  - before_tool_execution
+  - before_file_write_or_delete
+  - before_external_send
+  - before_payment_or_purchase
+  - before_account_or_security_change
+  - when_action_tier_is_unclear
+when_not_to_use:
+  - pure_observation_with_no_side_effect
+  - simple_explanation_without_action
+input_contract:
+  required:
+    - proposed_action
+    - actor
+    - target
+  optional:
+    - payload_summary
+    - origin_channel
+    - user_confirmation
+output_contract:
+  required:
+    - decision
+    - tier
+    - reason
+    - confirmation_required
+  optional:
+    - safer_alternative
+    - audit_fields
+hook_timing:
+  - post_model
+  - pre_tool
+  - post_tool
+  - error
+permission_tier:
+  default: policy_gate
+  auto_allowed:
+    - observation
+    - proposal
+    - draft
+  requires_confirmation:
+    - execution
+    - file_write_broad
+    - external_send
+    - delete
+    - account_change
+  strong_confirmation:
+    - payment
+    - purchase
+    - financial_execution
+  blocked_without_explicit_approval:
+    - secret_exfiltration
+    - security_policy_disable
+provider_preferences:
+  primary: local_policy
+  reviewers:
+    - claude_cli
+    - codex_cli
+  fallback:
+    - openai_api
+  notes: Deterministic policy decides first; LLM can explain edge cases.
+storage_policy:
+  audit: runtime/traces
+  policy_source: registry/permissions/permission-gate-policy.yaml
+  confirmations: runtime/handoff
+tests_or_validation:
+  - all_side_effect_actions_must_have_tier
+  - strictest_policy_wins_on_conflict
+  - produce_audit_reason_for_confirm_or_block
+

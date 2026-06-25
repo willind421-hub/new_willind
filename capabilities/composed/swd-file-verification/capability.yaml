@@ -1,0 +1,42 @@
+id: swd-file-verification
+version: 0.1.0
+status: active_contract
+purpose: >
+  Strict Write Discipline — 에이전트가 "파일 썼다"고 주장한 걸 SHA-256 스냅샷으로 실제
+  파일시스템과 대조한다. 주장≠실제면 배치 롤백(반쯤 망가진 쓰기 방지), 성공하면
+  해시체인 영수증(변조 감지). 신뢰 경계 = 모델이 아니라 파일시스템(모델 무관).
+  + Verified Cost-Router(검증 실패할 때만 비싼 모델로 한 단계 격상).
+relation:
+  complements: [test-and-smoke-harness]
+  overlaps_with_willind: claimed-done 재검증·undo 하드닝(어제 16바이트·락) — 빈칸=파일쓰기 SHA256 검증+자동롤백+해시체인 영수증
+when_to_use: [file_write_batch, ai_claimed_file_action, verified_undo, cost_aware_escalation]
+when_not_to_use: [read_only, pure_chat]
+method:
+  - snapshot_before_after          # 편집 전/후 SHA-256 스냅샷
+  - rollback_on_mismatch           # 주장≠실제면 배치 롤백
+  - hash_chained_receipt           # append-only 영수증, 변조·삭제 감지
+  - verified_cost_router           # 검증 실패 시에만 모델 한 단계 격상(평소 싸게)
+input_contract:
+  required: [file_actions]
+  optional: [test_cmd, escalation_cap]
+output_contract:
+  required: [verification_result, receipt, rollback_status]
+  optional: [escalation_decision]
+hook_timing: [pre_tool, post_tool, error]
+storage_policy: runtime_trace
+tests_or_validation: scripts/operations/skills/verify-skill-kernel.py
+runtime:
+  status: live   # 2026-06-22 코드 이식·테스트 완료 (말 → 실제 작동)
+  module: ai_tool/backend/services/swd_verification.py
+  wired_into: agent_loop._tool_write_file (write_file 도구가 verified_write 호출)
+  note: 외부 TypeScript 원본 베끼지 않고 willind식 재작성. write_file이 SHA-256 검증+롤백+영수증.
+permission_tier:
+  default: T2_execution_with_trace
+  auto_allowed: [observation, dry_run, snapshot, receipt_read]
+  requires_confirmation: [apply_to_real_tree, rollback_apply]
+provider_preferences:
+  implementers: [codex_cli]
+  note: 모델 무관 — 어느 provider 파일행동이든 SWD가 검증.
+notes:
+  - willind 안전·자율층의 핵심 빈칸. 사용자 "원격실행 필수"·파일 안전과 직결.
+

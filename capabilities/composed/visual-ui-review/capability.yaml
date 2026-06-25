@@ -1,0 +1,67 @@
+id: visual-ui-review
+version: 0.1.0
+status: active_contract
+purpose: >
+  Review and guide UI, screenshots, motion, panel layout, density, readability,
+  and Willind visual identity without overloading the interface with decoration.
+when_to_use:
+  - screenshot_review
+  - dashboard_panel_layout
+  - dark_or_light_theme_decision
+  - visual_reference_synthesis
+  - browser_or_electron_visual_qa
+when_not_to_use:
+  - backend_only_change
+  - payment_or_external_action
+  - pure_text_summary
+input_contract:
+  required:
+    - visual_target
+  optional:
+    - screenshots
+    - references
+    - viewport
+    - design_constraints
+output_contract:
+  required:
+    - visual_findings
+    - layout_recommendation
+    - readability_risks
+    - verification_steps
+  optional:
+    - css_or_component_scope
+hook_timing:
+  - intent_detected
+  - pre_model
+  - post_tool
+  - error
+permission_tier:
+  default: T2_visual_edit
+  auto_allowed:
+    - observation
+    - proposal
+    - draft
+    - local_screenshot
+  requires_confirmation:
+    - capturing_private_login_context
+    - publishing_screenshot
+    - broad_frontend_rewrite
+provider_preferences:
+  primary: browser_session
+  reviewers:
+    - gemini_api_or_browser
+    - claude_cli
+  implementers:
+    - codex_cli
+  fallback:
+    - openai_api
+  notes: Visual judgment and implementation are separate routes.
+storage_policy:
+  references: references/uiux
+  visual_reports: research/visual-qa
+  traces: runtime/traces
+tests_or_validation:
+  - screenshot_or_browser_verification_when_frontend_changes
+  - check_text_overflow_overlap_and_scroll
+  - report_if_only_build_was_run
+

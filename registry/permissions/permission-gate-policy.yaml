@@ -1,0 +1,340 @@
+contract: willind.permission_gate_policy
+version: 0.1.4
+updated: 2026-06-01
+
+purpose: >
+  Define the Willind permission boundary for app, file, money, external-send,
+  account-change, delete, and payment actions. Observation, proposal, and draft
+  are allowed by default; side effects need stricter handling.
+
+
+principles:
+  autonomy_default_allow_until_harm_boundary: true
+  internal_external_location_is_not_the_primary_boundary: true
+  observation_proposal_draft_preparation_free: true
+  pre_payment_cart_and_reservation_allowed_with_trace: true
+  final_payment_or_order_confirmation_requires_strong_confirmation: true
+  safe_execution_and_public_network_allowed_with_trace: true
+  external_send_requires_content_sensitivity_classification: true
+  unknown_external_send_sensitivity_defaults_to_confirm: true
+  execution_delete_external_send_payment_gate_required: true
+  destructive_or_arbitrary_delete_is_dangerous: true
+  remote_connector_policy_required_before_mutation: true
+  free_connector_onboarding_policy_required: true
+  strictest_policy_wins: true
+  secret_policy_always_wins: true
+  external_channels_are_input_not_authority: true
+  confirmation_must_be_specific_to_action_and_amount_or_target: true
+
+action_lifecycle:
+  observation:
+    description: Read, inspect, search, compare, summarize, or gather state.
+    default_decision: allow
+    trace: optional
+    examples: [price_lookup, ticket_availability_check, log_read, source_research]
+  proposal:
+    description: Recommend an option, rank choices, explain risk, or suggest a next step.
+    default_decision: allow
+    trace: optional
+    examples: [product_recommendation, provider_choice, ui_layout_option]
+  draft:
+    description: Prepare text, plan, command preview, shopping candidate, calendar draft, or report.
+    default_decision: allow
+    trace: recommended
+    examples: [email_draft, purchase_candidate_list, command_dry_run_plan]
+  preparation:
+    description: Prepare a reversible purchase, booking, app, or browser action up to the final side-effect boundary.
+    default_decision: trace_required
+    trace: required
+    examples: [checkout_ready_preview, ticket_options_ready, cart_candidate_ready, form_prefill_preview]
+  cart_or_reservation:
+    description: Add to cart, hold a reservation, reserve a ticket, or create an account-visible app state before payment.
+    default_decision: trace_required
+    trace: required
+    examples: [add_to_cart, reserve_ticket_hold, booking_hold, wishlist_or_saved_candidate]
+  free_connector_discovery:
+    description: Find public docs, free plan limits, MCP/API candidates, pricing pages, endpoint shape, and integration examples.
+    default_decision: allow
+    trace: optional
+    examples: [free_api_docs_scan, mcp_capability_scan, pricing_free_tier_check]
+  free_connector_auth_setup:
+    description: Create or configure a free API token, OAuth client, MCP app, bot, or webhook credential without enabling billing.
+    default_decision: confirm
+    trace: required
+    examples: [create_free_api_key, create_oauth_client, create_telegram_bot_token_slot, create_discord_app]
+  free_connector_secret_store:
+    description: Store an integration token or credential into an approved local secret store without printing, copying, or exporting the secret value.
+    default_decision: confirm
+    trace: required
+    examples: [write_token_to_env, write_private_key_to_secrets, rotate_local_connector_secret]
+  free_connector_quota_test:
+    description: Run a minimal smoke call that may consume free quota but does not spend money, mutate account settings, or expose private data.
+    default_decision: trace_required
+    trace: required
+    examples: [mcp_health_check, free_api_ping, oauth_token_refresh_test]
+  connector_scope_expansion:
+    description: Expand OAuth scopes, publish an app, alter integration permissions, rotate/delete remote keys, or change app visibility.
+    default_decision: strong_confirm_or_block
+    trace: required
+    examples: [oauth_scope_add_write, publish_google_auth_app, delete_remote_api_key, enable_webhook_external_delivery]
+  execution:
+    description: Perform a local or external action that changes state but does not leak private data, spend money, or destroy needed assets.
+    default_decision: trace_required
+    trace: required
+    examples: [file_write, service_smoke, calendar_draft_write, browser_public_navigation]
+  delete:
+    description: Remove files, records, history, messages, comments, accounts, or generated data.
+    default_decision: confirm_or_block
+    trace: required
+    examples: [file_delete, db_delete, history_rewrite]
+    blocked_by_default: [secret_delete_without_backup, project_history_rewrite_without_explicit_instruction]
+  external_send:
+    description: Send or publish data outside local Willind. Public/non-sensitive generated content can be trace-required; private, secret, money, or unknown-sensitive content requires confirmation or blocks.
+    default_decision: confirm
+    trace: required
+    examples: [email_send, sns_post, webhook_send, pull_request_create]
+  payment:
+    description: Purchase, pay, transfer, subscribe, advertise, book, or otherwise spend money.
+    default_decision: strong_confirm
+    trace: required
+    examples: [checkout, ticket_purchase, subscription_change, paid_ad_run]
+  account_change:
+    description: Change login, profile, privacy, security, billing, integration, or account settings.
+    default_decision: strong_confirm_or_block
+    trace: required
+    examples: [oauth_app_publish, password_change, api_key_create_or_delete, privacy_setting_change]
+
+domains:
+  app:
+    read: allow
+    draft: allow
+    submit_non_sensitive_public_or_local: trace_required
+    submit_private_money_or_unknown: confirm
+    install_or_uninstall: confirm
+    account_setting: strong_confirm_or_block
+  file:
+    read: allow_except_secrets
+    create_or_edit: trace_required
+    move: trace_required
+    delete_runtime_temp: trace_required
+    delete_needed_or_source_or_raw: confirm_or_block
+    arbitrary_delete: blocked_without_explicit_target
+    secret_read: blocked_without_explicit_user_instruction
+  money:
+    observation: allow
+    proposal: allow
+    draft: allow
+    small_experiment_plan: allow
+    spend: strong_confirm
+    transfer_or_trade: strong_confirm_or_block
+  external_send:
+    draft: allow
+    preview: allow
+    public_non_sensitive_generated_send: trace_required
+    send_unknown_sensitivity: confirm
+    private_or_personal_data_send: strong_confirm_or_block
+    secret_or_credential_send: blocked
+    dm_or_comment_unknown_sensitivity: confirm
+  account_change:
+    observe_setting: allow
+    recommend_setting: allow
+    change_setting: strong_confirm
+    security_policy_disable: blocked_without_explicit_user_instruction
+  remote_device:
+    read_status: allow
+    read_files_or_logs: allow_except_secrets
+    dry_run_preview: allow
+    file_create_or_edit: trace_required
+    file_move_or_rename: confirm
+    file_delete: confirm_or_block
+    package_install_or_global_tool_update: confirm
+    process_or_service_control: confirm
+    external_network_call: confirm
+    reboot_shutdown_or_power_change: strong_confirm_or_block
+    account_or_password_change: strong_confirm_or_block
+    security_policy_change: strong_confirm_or_block
+    destructive_disk_operation: blocked
+    other_user_home_access: blocked_without_explicit_user_instruction
+  connector_onboarding:
+    discover_public_docs: allow
+    compare_free_plans: allow
+    generate_setup_steps: allow
+    create_free_app_or_token: confirm
+    store_secret_locally: confirm
+    smoke_call_free_quota: trace_required
+    read_secret_value: blocked_without_explicit_user_instruction
+    print_or_copy_secret_value: blocked
+    expand_oauth_scope: strong_confirm
+    publish_external_app: strong_confirm
+    delete_remote_key: strong_confirm
+    enable_billing_or_paid_plan: blocked_without_explicit_confirmation
+    register_payment_card: blocked_without_explicit_confirmation
+    approved_secret_locations:
+      - C:/new_willind/.env
+      - C:/new_willind/.secrets/
+    never_log_secret_material: true
+  delete:
+    temporary_runtime_cleanup: trace_required
+    final_output_delete: confirm
+    source_or_raw_delete: confirm_or_block
+    secret_or_credential_delete: blocked_without_explicit_user_instruction
+  payment:
+    compare_options: allow
+    cart_or_booking_draft: allow
+    form_prefill_or_checkout_preview: trace_required
+    add_to_cart: trace_required
+    reservation_hold_before_payment: trace_required
+    order_or_booking_confirmation: strong_confirm
+    final_payment_submit: strong_confirm
+    recurring_payment_or_subscription: strong_confirm
+
+confirmation_levels:
+  allow:
+    user_prompt_required: false
+  trace_required:
+    user_prompt_required: false
+    must_record: [actor, action, target, reason]
+  confirm:
+    user_prompt_required: true
+    must_state: [action, target, consequence]
+  strong_confirm:
+    user_prompt_required: true
+    must_state: [action, target, amount_or_scope, consequence, rollback_limit]
+  blocked:
+    user_prompt_required: false
+    response: explain_block_and_offer_safe_alternative
+
+connector_policies:
+  free_api_mcp_onboarding:
+    applies_to:
+      - public_api
+      - mcp_server
+      - oauth_app
+      - webhook
+      - bot_token
+      - browser_automation_connector
+      - local_tool_bridge
+    free_plan_first: true
+    billing_disabled_by_default: true
+    dry_run_first: true
+    never_log_secret_material: true
+    approved_secret_locations:
+      - C:/new_willind/.env
+      - C:/new_willind/.secrets/
+    safe_without_prompt:
+      - public_docs_read
+      - pricing_free_tier_check
+      - setup_plan_draft
+      - local_config_key_name_check
+      - free_quota_readonly_check
+    confirm_before:
+      - create_free_api_key
+      - create_oauth_client
+      - store_token_in_env
+      - store_key_in_secrets
+      - refresh_oauth_token
+      - run_free_quota_smoke_call
+      - connect_webhook_receiver
+    strong_confirm_or_block:
+      - expand_oauth_scope
+      - publish_external_app
+      - delete_remote_api_key
+      - rotate_remote_api_key
+      - enable_write_scope
+      - enable_external_delivery
+    blocked:
+      - enable_billing_without_explicit_confirmation
+      - register_payment_card_without_explicit_confirmation
+      - upgrade_to_paid_plan_without_explicit_confirmation
+      - print_or_copy_token_value
+      - send_token_to_external_channel
+      - store_secret_outside_approved_location
+      - scrape_or_bypass_captcha_for_connector_setup
+    report_shape:
+      - connector_name
+      - free_plan_limit
+      - scopes_requested
+      - secret_storage_target
+      - permission_decision
+      - smoke_test_result
+      - next_confirmation_needed
+  remote_device:
+    applies_to:
+      - ssh
+      - tailscale_ssh
+      - macos_automator_mcp
+      - secure_mesh_remote_tool
+      - remote_browser
+      - remote_cli
+    target_scope: user_owned_registered_devices_only
+    dry_run_first: true
+    require_trace_for_all_mutations: true
+    never_log_secret_material: true
+    safe_without_prompt:
+      - pwd
+      - ls
+      - find
+      - cat_non_secret_file
+      - grep_non_secret_file
+      - uname
+      - df
+      - top_readonly
+      - service_status_readonly
+    confirm_before:
+      - file_create_or_edit
+      - file_move_or_rename
+      - file_delete
+      - mkdir
+      - curl_or_wget
+      - package_install
+      - global_tool_update
+      - process_kill
+      - service_restart
+      - git_remote_write
+    strong_confirm_or_block:
+      - shutdown
+      - reboot
+      - account_or_password_change
+      - security_policy_change
+      - firewall_or_defender_change
+      - billing_or_subscription_change
+    blocked:
+      - rm_rf_without_explicit_target_and_backup
+      - no_preserve_root
+      - dd_to_block_device
+      - disk_partition_or_format
+      - sudo_without_explicit_user_instruction
+      - git_push_force_to_main_or_protected_branch
+      - access_other_user_home_without_explicit_instruction
+      - print_or_copy_private_key
+      - read_secret_file_without_explicit_instruction
+    report_shape:
+      - target_device
+      - planned_action
+      - permission_decision
+      - dry_run_result
+      - next_confirmation_needed
+
+blocked_always:
+  - secret_exfiltration
+  - private_data_exfiltration
+  - captcha_bypass
+  - private_content_unauthorized_access
+  - payment_without_explicit_confirmation
+  - money_transfer_without_explicit_confirmation
+  - trade_execution_without_explicit_confirmation
+  - account_change_without_explicit_confirmation
+  - destructive_delete_without_explicit_confirmation
+  - arbitrary_delete_of_needed_files
+  - remote_destructive_disk_command
+  - remote_sudo_without_explicit_user_instruction
+  - remote_git_push_force_to_main_or_protected_branch
+  - remote_private_key_or_secret_material_print
+  - remote_other_user_home_access_without_explicit_instruction
+  - token_or_credential_logging
+  - secret_storage_outside_approved_location
+  - billing_enable_without_explicit_confirmation
+  - card_registration_without_explicit_confirmation
+  - paid_plan_upgrade_without_explicit_confirmation
+  - connector_scope_expansion_without_explicit_confirmation
+

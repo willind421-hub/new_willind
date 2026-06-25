@@ -1,0 +1,150 @@
+contract: willind.skill_kernel
+version: 0.1.0
+updated: 2026-05-25
+
+purpose: >
+  Define the provider-agnostic decision flow that turns a user input into
+  a Willind capability, provider route, permission decision, response, action,
+  and record. This file is a contract, not a runtime implementation.
+
+
+spine:
+  registry_is_spine: true
+  registry_first_read:
+    - registry/kernel/baseline-rules.yaml
+    - registry/_index.yaml
+    - registry/hooks/skill-routing.yaml
+    - registry/providers/provider-bootstrap.yaml
+    - registry/providers/skill-provider-routing.yaml
+    - registry/permissions/permission-gate-policy.yaml
+    - registry/files/file-routing-policy.yaml
+    - registry/data/data-catalog.yaml
+  kernel_role: flow_contract
+  registry_role: source_of_truth_for_routes
+  capability_role: reusable_willind_ability
+  provider_role: replaceable_execution_engine
+  adapter_role: thin_translation_layer
+  workflow_role: repeatable_real_work_procedure
+
+flow:
+  - step: baseline_bootstrap
+    description: Load provider-agnostic rules that must apply before situational skills.
+    reads:
+      - registry/kernel/baseline-rules.yaml
+      - registry/providers/provider-bootstrap.yaml
+    rules:
+      always_on: true
+      no_hallucinated_certainty: true
+      registry_first: true
+      permission_gate_owns_side_effects: true
+      load_situational_skills_only_after_selection: true
+    outputs:
+      - baseline_rule_ids
+      - provider_bootstrap_profile
+
+  - step: input_intake
+    description: Normalize voice, text, browser, terminal, scheduled, or connector input.
+    reads:
+      - registry/hooks/skill-routing.yaml
+    outputs:
+      - normalized_input
+      - input_channel
+      - source_context
+
+  - step: intent_and_context_judgment
+    description: Classify intent, domain, urgency, ambiguity, and risk.
+    rules:
+      ask_only_when_needed: true
+      obvious_safe_judgment_is_agent_responsibility: true
+      business_and_money_questions_allow_deeper_question_mode: true
+    outputs:
+      - intent
+      - domain
+      - risk_hint
+      - ambiguity_level
+      - candidate_capabilities
+
+  - step: capability_selection
+    description: Select one or more composed capabilities from registry hooks.
+    reads:
+      - capabilities/composed/*/capability.yaml
+      - registry/hooks/skill-routing.yaml
+    rules:
+      imported_sources_are_not_live_behavior: true
+      load_only_relevant_capability_summary: true
+      compose_small_capabilities_in_sequence: true
+    outputs:
+      - selected_capabilities
+      - hook_timing
+      - input_contract
+      - output_contract
+
+  - step: provider_selection
+    description: Pick the smallest reliable provider route for the selected capability.
+    reads:
+      - registry/providers/skill-provider-routing.yaml
+      - registry/providers/provider-cli-routing.yaml
+    rules:
+      route_by_task_not_model: true
+      subscription_is_capacity_not_identity: true
+      benchmark_is_signal_not_truth: true
+      deterministic_first_for_monitoring: true
+    outputs:
+      - primary_provider
+      - fallback_chain
+      - reviewer_provider
+      - budget_tier
+
+  - step: permission_check
+    description: Classify the planned action by lifecycle and permission tier before execution.
+    reads:
+      - registry/permissions/permission-gate-policy.yaml
+      - registry/tools/tool-slot-index.yaml
+    lifecycle:
+      auto_allowed:
+        - observation
+        - proposal
+        - draft
+        - preparation
+      gate_required:
+        - cart_or_reservation
+        - execution
+        - delete
+        - external_send
+        - payment
+        - account_change
+    outputs:
+      - permission_decision
+      - confirmation_required
+      - blocked_reason
+
+  - step: execute_or_respond
+    description: Either answer the user, produce a draft, or invoke a safe approved tool.
+    rules:
+      dry_run_first_for_risky_actions: true
+      tool_calls_must_match_registered_contract: true
+      external_side_effects_need_approval: true
+    outputs:
+      - response
+      - tool_result
+      - artifact_candidate
+
+  - step: record_and_route_outputs
+    description: Record trace, errors, final outputs, reusable references, and review items.
+    reads:
+      - registry/files/file-routing-policy.yaml
+      - registry/data/data-catalog.yaml
+    writes:
+      traces: runtime/traces
+      logs: runtime/logs
+      review_items: runtime/cleanup/review-items
+      final_outputs: outputs
+      reusable_references: references
+    outputs:
+      - decision_trace
+      - followup_candidate
+
+non_goals:
+  - This contract does not replace project runtime code.
+  - This contract does not automatically move legacy files.
+  - This contract does not expose secrets or read private credential stores.

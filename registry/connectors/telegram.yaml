@@ -1,0 +1,49 @@
+contract: willind.connector.telegram
+version: 0.1.0
+updated: 2026-06-14
+
+connector:
+  id: telegram
+  display_name: Telegram Gateway
+  kind: external_text_input_gateway
+  priority: P1
+  status: planned_disabled
+  owner_scope: input_surface_and_notification
+
+read:
+  status: planned_disabled
+  permission_required: allow
+  notes: Allowed chat messages can be received and classified.
+draft:
+  status: planned_disabled
+  permission_required: allow
+  notes: Replies and action candidates may be drafted locally.
+write:
+  status: planned_disabled
+  permission_required: trace_required
+  notes: Local gateway state and room links may be written with trace.
+send:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Outbound replies and notifications pass external-send preflight.
+delete:
+  status: planned_disabled
+  permission_required: confirm_or_block
+  notes: Message or history deletion is not a default connector action.
+payment:
+  status: blocked
+  permission_required: blocked
+  notes: Telegram must not perform payment or money movement.
+
+secret_env_names:
+  - TELEGRAM_BOT_TOKEN
+  - TELEGRAM_ALLOWED_CHAT_IDS
+  - TELEGRAM_CHAT_ID
+
+permission_required:
+  read: allow
+  draft: allow
+  write: trace_required
+  send: confirm
+  delete: confirm_or_block
+  payment: blocked

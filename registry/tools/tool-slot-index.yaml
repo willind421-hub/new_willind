@@ -1,0 +1,187 @@
+contract: willind.tool_slot_index
+version: 0.1.1
+updated: 2026-06-02
+
+purpose: >
+  Provide a human and agent readable index above the executable manifests in
+  your tool-slot-registry backend. The project manifests are runtime
+  details; this file is the Willind-level meaning map.
+
+runtime_backend:
+  project: "<your-backend>/tool-slot-registry"
+  manifest_glob: "<your-backend>/tool-slot-registry/manifests/*.json"
+  relationship: registry/tools is the semantic index; project manifests are executable tool records.
+
+visibility_policy:
+  contract: willind.tool_visibility_policy
+  version: 0.1.0
+  caller_model: permission_envelope_not_department
+  default_for_low_trust_callers: hide_or_block_dangerous_tools
+  admin_or_single_user_can_see_all: true
+  public_block_patterns:
+    - mcp__*
+    - shell
+    - powershell
+    - cmd
+    - bash
+    - python
+    - file.write
+    - file.delete
+    - manage_mcp
+    - manage_memory
+    - manage_skills
+    - send_email
+    - reply_to_email
+    - api_call
+    - app_api
+    - token
+    - credential
+    - secret
+    - payment
+    - account
+  public_blocked_domains:
+    - filesystem
+    - action_execution
+    - device_mesh
+    - fabrication
+    - provider_config
+    - mcp_management
+    - external_send
+    - account
+    - payment
+  public_blocked_permissions:
+    - confirm
+    - deny
+    - strong_confirm
+    - confirm_or_block
+    - strong_confirm_or_block
+  owner_helpers: []  # fill with "<your-backend>/permission_gateway:owner_is_admin", etc.
+
+tool_slots:
+  - id: browser
+    manifest: <your-backend>/tool-slot-registry/manifests/browser.json
+    domain: browser_automation
+    role: inspection_and_navigation
+    default_permission: safe
+    confirm_scopes: [browser.submit]
+    hook_candidates: [intent_detected, pre_tool, post_tool]
+
+  - id: document-read
+    manifest: <your-backend>/tool-slot-registry/manifests/document-read.json
+    domain: documents
+    role: read_and_extract
+    default_permission: safe
+    hook_candidates: [intent_detected, pre_tool, post_tool]
+
+  - id: artifact-write
+    manifest: <your-backend>/tool-slot-registry/manifests/artifact-write.json
+    domain: outputs
+    role: create_or_update_artifacts
+    default_permission: confirm
+    hook_candidates: [pre_tool, post_tool, shutdown_archive]
+
+  - id: file
+    manifest: <your-backend>/tool-slot-registry/manifests/file.json
+    domain: filesystem
+    role: controlled_file_access
+    default_permission: confirm
+    blocked_scopes: [file.delete_unreviewed, secret.read_unapproved]
+    hook_candidates: [pre_tool, post_tool]
+
+  - id: project-test-run
+    manifest: <your-backend>/tool-slot-registry/manifests/project-test-run.json
+    domain: verification
+    role: test_and_smoke_execution
+    default_permission: safe_with_trace
+    hook_candidates: [pre_tool, post_tool, error]
+
+  - id: dashboard-backend
+    manifest: <your-backend>/tool-slot-registry/manifests/dashboard-backend.json
+    domain: dashboard
+    role: backend_status_and_api
+    default_permission: safe_read
+    hook_candidates: [scheduled, pre_tool, post_tool]
+
+  - id: api-hub
+    manifest: <your-backend>/tool-slot-registry/manifests/api-hub.json
+    domain: api_gateway
+    role: representative_port_and_routing
+    default_permission: safe_read
+    hook_candidates: [scheduled, pre_tool, post_tool]
+
+  - id: signal-intelligence
+    manifest: <your-backend>/tool-slot-registry/manifests/signal-intelligence.json
+    domain: signals
+    role: signal_store_and_scoring
+    default_permission: safe_read
+    hook_candidates: [scheduled, intent_detected, post_tool]
+
+  - id: action-runtime
+    manifest: <your-backend>/tool-slot-registry/manifests/action-runtime.json
+    domain: action_execution
+    role: queued_action_lifecycle
+    default_permission: confirm
+    hook_candidates: [pre_tool, post_tool, error]
+
+  - id: memory-chat
+    manifest: <your-backend>/tool-slot-registry/manifests/memory-chat.json
+    domain: memory
+    role: chat_memory_interface
+    default_permission: safe_read
+    hook_candidates: [context_load, post_tool]
+
+  - id: secure-mesh
+    manifest: <your-backend>/tool-slot-registry/manifests/secure-mesh.json
+    domain: device_mesh
+    role: device_and_window_link_registry
+    default_permission: confirm
+    hook_candidates: [pre_tool, post_tool, scheduled]
+
+  - id: 3d-forge
+    manifest: <your-backend>/tool-slot-registry/manifests/3d-forge.json
+    domain: fabrication
+    role: model_generation_and_viewer
+    default_permission: confirm
+    blocked_scopes: [forge.device.write]
+    hook_candidates: [intent_detected, pre_tool, post_tool]
+
+  - id: voice-gen
+    manifest: <your-backend>/tool-slot-registry/manifests/voice-gen.json
+    domain: fabrication
+    role: narration_audio_timestamp_generation
+    default_permission: confirm
+    confirm_scopes: [voice.generate.typecast, voice.generate.elevenlabs, voice.generate.clova]
+    hook_candidates: [intent_detected, pre_tool, post_tool]
+
+  - id: video-gen
+    manifest: <your-backend>/tool-slot-registry/manifests/video-gen.json
+    domain: fabrication
+    role: image_to_video_clip_generation
+    default_permission: confirm
+    confirm_scopes: [video.render.ltx_local, video.render.wan_local, video.model_download, video.provider_free_quota_smoke]
+    blocked_scopes: [video.render.paid_api, video.publish.external]
+    hook_candidates: [intent_detected, pre_tool, post_tool]
+
+  - id: youtube-conveyor
+    manifest: <your-backend>/tool-slot-registry/manifests/youtube-conveyor.json
+    domain: action_execution
+    role: youtube_production_workflow_conductor
+    default_permission: confirm
+    confirm_scopes: [conveyor.image.live, conveyor.video.live, conveyor.voice.live]
+    blocked_scopes: [conveyor.publish.external]
+    hook_candidates: [intent_detected, pre_tool, post_tool]
+
+  - id: scheduler
+    manifest: <your-backend>/tool-slot-registry/manifests/scheduler.json
+    domain: scheduling
+    role: croncreate_schedule_reminder_and_service_job_boundary
+    default_permission: safe_read
+    confirm_scopes: [scheduler.trigger_now, scheduler.delete_needed_schedule, scheduler.external_notification]
+    hook_candidates: [intent_detected, pre_tool, post_tool, scheduled]
+    registry_contract: registry/services/scheduler-comparison.yaml
+
+rules:
+  runtime_manifest_not_authority_by_itself: true
+  registry_permission_overrides_manifest_when_stricter: true
+  missing_manifest_status: planned_or_unavailable_not_deleted
+  external_side_effects_need_approval: true

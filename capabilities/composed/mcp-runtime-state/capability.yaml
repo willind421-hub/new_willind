@@ -1,0 +1,20 @@
+id: mcp-runtime-state
+title: MCP 런타임 상태 모델
+version: 0.1.0
+purpose: >
+  Represent MCP servers, reconnect state, OAuth needs, tool counts, and
+  tool-level enable/disable state above Willind tool slots.
+runtime_role: backend_api_contract
+permission_tier:
+  default: T2_trace_required
+inputs:
+  - registry/tools/tool-slot-index.yaml
+  - ai_tool/backend/services/mcp_bridge.py
+outputs:
+  - mcp_server_state
+  - mcp_tool_visibility_state
+do_not:
+  - start_unknown_mcp_without_gate
+  - expose_tokens
+  - copy_mcp_list_verbatim
+status: contract_registered

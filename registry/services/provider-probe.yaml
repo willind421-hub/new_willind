@@ -1,0 +1,116 @@
+contract: willind.provider_probe_service
+version: 0.1.2
+updated: 2026-06-03
+
+service:
+  id: provider-probe
+  display_name: Willind Provider Probe
+  kind: read_only_provider_runtime_probe
+  status: active_available
+  project: ""
+
+purpose: >
+  Show whether provider routes such as Codex, Claude, Gemini, OpenAI API,
+  local model, browser, OpenCode, and OpenHands are ready without reading
+  secret values or calling paid remote APIs.
+
+boundaries:
+  read_only: true
+  starts_services: false
+  stops_services: false
+  executes_provider: false
+  reads_secret_files: false
+  reads_env_values: false
+  reads_env_key_names_only: true
+  calls_paid_remote_api: false
+
+entrypoints:
+  dashboard_backend_service: "<your-backend>/services/provider_probe.py"
+  api_router: "<your-backend>/routers/provider_probe.py"
+  api_paths:
+    - /api/providers/probes
+    - /api/providers/probes/{provider_id}
+    - /api/providers/routing
+  ops_overview_surface: /api/ops/overview
+
+sources:
+  provider_cli_routing: registry/providers/provider-cli-routing.yaml
+  skill_provider_routing: registry/providers/skill-provider-routing.yaml
+  provider_bootstrap: registry/providers/provider-bootstrap.yaml
+
+probe_model:
+  cli_provider:
+    checks:
+      - command_name_on_path
+    examples:
+      - codex_cli
+      - claude_cli
+      - opencode_cli
+  api_provider:
+    checks:
+      - required_env_key_name_present
+    value_policy: never_return_env_value
+    examples:
+      - openai_api
+      - gemini_api_or_browser
+  local_runtime_provider:
+    checks:
+      - localhost_health_endpoint
+    examples:
+      - local_llm
+      - service_supervisor
+      - tool_slot_runtime
+  registry_ready_provider:
+    checks:
+      - registry_contract_available
+    examples:
+      - willind_ai_rules
+      - browser_session
+      - openhands_workspace
+
+routing_snapshot:
+  api: /api/providers/routing
+  contract: willind.provider_runtime_routing_snapshot
+  source_weights: registry/providers/provider-weights.snapshot.yaml
+  behavior: >
+    Combines registry weights, optional task override order, and current
+    read-only probe status into a ranked provider list. It is a score surface,
+    not a launcher.
+  cooldown_sources:
+    - not_configured
+    - unavailable
+  calls_paid_remote_api: false
+  executes_provider: false
+
+runtime_recovery:
+  bounded_launcher: scripts/operations/providers/ensure_required_provider_runtimes.py
+  default_mode: status_or_dry_run
+  starts_services_by_default: false
+  start_flag_required: --start
+  starts_only_required_local_providers: true
+  owned_process_cleanup_on_failed_start: true
+  state_path: runtime/provider-runtimes/required-provider-runtimes.json
+  log_dir: runtime/logs/provider-runtimes
+  note: >
+    Provider Probe remains read-only. This helper is a separate bounded
+    recovery surface for active/limited local runtime providers such as
+    service_supervisor and tool_slot_runtime.
+
+status_labels:
+  available: 사용 가능
+  configured: 설정 감지
+  registry_ready: registry 준비
+  degraded: 확인 필요
+  not_configured: 설정 필요
+  unavailable: 실행 경로 없음
+  unknown: 규칙 없음
+
+tests:
+  - scripts/operations/providers/verify_provider_probe_contract.py
+  - scripts/operations/providers/test_provider_probe_contract.py
+  - scripts/operations/providers/test_required_provider_runtime_launcher.py
+
+notes:
+  - This is not a provider launcher.
+  - The bounded runtime launcher is separate and does not run unless --start is passed.
+  - This service makes provider routing observable before execution.

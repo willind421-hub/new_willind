@@ -1,0 +1,87 @@
+id: idea-to-spec-convergence
+version: 0.1.0
+status: active_contract
+purpose: >
+  Convert a broad or ambiguous idea into enough structured project intent,
+  seed documents, execution route, and evaluation criteria for Willind to
+  dispatch work without losing the user's original goal.
+when_to_use:
+  - broad_new_product_or_feature_request
+  - unclear_business_or_tool_idea
+  - user_asks_how_to_think_about_an_idea
+  - expensive_or_multi_agent_work_before_execution
+  - external_skill_or_workflow_absorption_needs_seed_docs
+when_not_to_use:
+  - quick_single_file_fix
+  - direct_known_command
+  - casual_conversation
+  - already_scoped_task_with_tests
+  - user_explicitly_requests_no_questions
+input_contract:
+  required:
+    - raw_user_intent
+  optional:
+    - known_constraints
+    - target_project
+    - available_providers
+    - risk_or_cost_hint
+    - existing_docs
+output_contract:
+  required:
+    - intent_summary
+    - ambiguity_status
+    - source_backed_option_hypotheses
+    - active_interview_question_set
+    - minimal_question_set_or_no_questions_reason
+    - seed_document_targets
+    - provider_or_workroom_route
+    - evaluation_checks
+  optional:
+    - rejected_questions
+    - followup_workflow
+    - memory_update_candidate
+hook_timing:
+  - intent_detected
+  - context_load
+  - pre_model
+  - pre_tool
+  - post_tool
+  - error
+permission_tier:
+  default: T1_decision_support
+  auto_allowed:
+    - intent_summary
+    - question_set
+    - seed_outline
+    - evaluation_plan
+  requires_confirmation:
+    - project_file_write
+    - long_running_workroom
+    - paid_provider_use
+    - live_registry_policy_change
+  blocked_without_explicit_approval:
+    - payment
+    - external_send
+    - account_change
+    - secret_read
+    - needed_file_delete
+provider_preferences:
+  primary: claude_cli
+  implementers:
+    - codex_cli
+  fallback:
+    - openai_api
+    - local_llm
+  notes: >
+    Use a strong reasoning provider for ambiguity reduction. Use Codex when the
+    result becomes concrete code, tests, or registry changes.
+storage_policy:
+  seed_docs: projects/<project>/docs/planning
+  decisions: projects/<project>/docs/planning/decisions
+  traces: runtime/traces
+tests_or_validation:
+  - quick_tasks_must_not_force_interview
+  - broad_tasks_must_have_seed_or_questions
+  - vague_online_selling_must_include_research_and_active_interview
+  - execution_route_must_respect_permission_gate
+  - generated_questions_must_be_short_and_necessary

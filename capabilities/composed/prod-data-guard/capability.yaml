@@ -1,0 +1,40 @@
+id: prod-data-guard
+version: 0.1.0
+status: active_contract
+purpose: >
+  편집 수준 기계 강제 — 테스트 파일이 실제 운영 데이터 경로(prod DB 등)에 접근하는 걸
+  훅으로 차단한다. (예: sqlite3.connect("app/data/prod.db") 차단 / ":memory:" 허용)
+  프롬프트 규율이 아니라 PostToolUse 훅으로 기계적으로 막아 약한 모델에도 먹힌다.
+relation:
+  complements: [permission-review, agent-safety-gate, swd-file-verification]
+  overlaps_with_willind: permission gate(돈·삭제·외부전송) — 빈칸=테스트↔prod 데이터 경계 기계강제
+when_to_use: [test_authoring, shared_resource_change, db_path_in_code]
+when_not_to_use: [non_code_task]
+method:
+  - block_test_touching_prod_data   # prod 경로 접근 차단, :memory:/fixture 허용
+  - route_shared_resource_via_guard # 공유 리소스 변경을 단일 보호 함수로
+input_contract:
+  required: [code_or_test_target]
+  optional: [db_paths]
+output_contract:
+  required: [guard_result, blocked_paths]
+  optional: [allowed_alternatives]
+hook_timing: [pre_tool, post_tool, error]
+storage_policy: runtime_trace
+tests_or_validation: scripts/operations/skills/verify-skill-kernel.py
+runtime:
+  status: already_in_willind   # 중복 — 베끼지 않고 기존 코드에 연결(사용자 정책 2026-06-22)
+  existing_implementation:
+    - services/agent_loop.py:_safe_write_path (outputs/만 허용, prod 경로 차단)
+    - services/agent_loop.py:ALLOWED_READ_ROOTS / ALLOWED_ROOT_FILES (경로 화이트리스트)
+    - config/willind/modes/coding.yaml:blocked_paths (본체 경로 차단)
+  note: 외부 prod 데이터 차단 스킬 = willind 경로 화이트리스트로 이미 됨. 이식 안 함(중복 방지).
+permission_tier:
+  default: T3_mechanical_block   # 차단은 강하게(약한 모델 보호)
+  auto_allowed: [observation, lint_check]
+  blocked: [test_writing_to_real_prod_path]
+provider_preferences:
+  implementers: [codex_cli]
+notes:
+  - 모델 등급별 핵심 — 약한 모델엔 코드강제의 대표 사례(모델 지능 무관, 훅이 막음). [[skill-merge-design]]
+

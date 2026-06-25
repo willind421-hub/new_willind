@@ -1,0 +1,85 @@
+id: agent-gateway-runtime
+version: 0.1.0
+status: active_contract
+purpose: >
+  Treat multi-channel gateway input, provider switching, scheduled
+  automation, and memory-loop patterns as read-only intake metadata before any
+  Action Runtime or Permission Gate execution step.
+when_to_use:
+  - external_channel_intake
+  - gateway_message_classification
+  - provider_switching_preview
+  - scheduled_automation_candidate_review
+  - memory_loop_policy_review
+when_not_to_use:
+  - direct_file_edit
+  - payment_or_purchase_execution
+  - external_message_send
+  - account_setting_change
+  - remote_gateway_start
+input_contract:
+  required:
+    - incoming_text_or_event
+    - input_channel
+  optional:
+    - source_gateway
+    - requested_provider
+    - schedule_hint
+    - memory_update_candidate
+output_contract:
+  required:
+    - normalized_intent
+    - permission_lifecycle
+    - provider_policy_preview
+    - safe_handoff_boundary
+    - would_execute
+  optional:
+    - selected_gateway_reference
+    - memory_update_candidate
+    - scheduled_followup_candidate
+hook_timing:
+  - intent_detected
+  - context_load
+  - pre_model
+  - pre_tool
+  - post_tool
+  - error
+  - shutdown_archive
+permission_tier:
+  default: T3_gateway_intake
+  auto_allowed:
+    - classify_gateway_input
+    - preview_provider_switch
+    - draft_schedule_candidate
+    - summarize_memory_update_candidate
+  requires_confirmation:
+    - start_gateway_service
+    - send_external_message
+    - create_scheduled_task
+    - call_paid_provider_loop
+  blocked_without_explicit_approval:
+    - payment
+    - account_change
+    - secret_or_token_read
+    - remote_execution_from_gateway_message
+provider_preferences:
+  primary: local_policy
+  reviewers:
+    - claude_cli
+  fallback:
+    - browser_session
+    - openai_api
+  notes: >
+    Local policy should classify gateway input first. Claude can review the
+    structure. Browser/API may only be used for reference lookup or fallback
+    reasoning after redaction.
+storage_policy:
+  source_inventory: registry/skills/skill-source-inventory.yaml
+  import_adapt_registry: registry/skills/external-skill-import-adapt.yaml
+  runtime_trace: runtime/traces
+  final_output: outputs/reports
+tests_or_validation:
+  - resolver_selects_agent_gateway_runtime_for_gateway_smoke
+  - live_behavior_must_keep_would_execute_false
+  - external_channel_input_must_not_grant_execution_permission
+  - payment_send_delete_account_change_must_route_to_permission_review

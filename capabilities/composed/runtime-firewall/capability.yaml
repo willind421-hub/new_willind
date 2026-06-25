@@ -1,0 +1,40 @@
+id: runtime-firewall
+version: 0.1.0
+status: active_contract
+purpose: >
+  로컬-우선 런타임 방화벽 — 에이전트의 프롬프트/응답을 실행 전에 가로채 민감정보 유출,
+  위험 명령, 정책 위반을 걸러낸다. zero-latency·local-first(외부 전송 없음).
+relation:
+  complements: [untrusted-context-wrapper, permission-review, tool-visibility-gate]
+  overlaps_with_willind: external-send preflight·untrusted-context(외부데이터 차단) — 빈칸=프롬프트/응답 인터셉트 런타임 필터
+when_to_use: [pre_prompt_filter, response_leak_check, dangerous_command_intercept]
+when_not_to_use: [pure_chat_no_secrets]
+method:
+  - intercept_prompt_and_response   # 실행 전 가로채기
+  - block_leak_and_dangerous        # 비밀유출·위험명령 차단
+  - local_only_no_external          # 외부 전송 0
+input_contract:
+  required: [prompt_or_response]
+  optional: [policy_set]
+output_contract:
+  required: [filter_result, blocked_items]
+  optional: [redaction_log]
+hook_timing: [pre_model, post_model, pre_tool, post_tool, error]
+storage_policy: runtime_trace
+tests_or_validation: scripts/operations/skills/verify-skill-kernel.py
+runtime:
+  status: already_in_willind   # 중복 — 베끼지 않고 기존 코드에 연결(사용자 정책 2026-06-22)
+  existing_implementation:
+    - services/external_send_guard.py (외부전송 비밀차단·redact)
+    - services/agent_loop.py:_looks_like_secret / _redact_secrets (출력·저장 비밀 차단)
+    - capabilities/composed/untrusted-context-wrapper (외부데이터 차단)
+  note: 외부 런타임 방화벽 스킬 = willind에 이미 동등 기능. 새 코드 이식 안 함(중복 방지).
+permission_tier:
+  default: T3_safety_filter
+  auto_allowed: [observation, local_filter]
+  requires_confirmation: [policy_change]
+provider_preferences:
+  implementers: [codex_cli]
+notes:
+  - 권한 큰 도구(프롬프트 가로채기)라 변환 시 willind permission gate에 종속시킴 — 단독 결정권 없음.
+

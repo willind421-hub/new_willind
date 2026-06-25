@@ -1,0 +1,57 @@
+contract: willind.mode_runner_service
+version: 0.1.0
+updated: 2026-06-03
+
+service:
+  id: mode-runner
+  display_name: Willind Mode Runner
+  kind: permission_aware_mode_plan
+  status: active_available
+  project: ""
+
+purpose: >
+  Classify mode setup/runtime/exit actions into safe queued, approval-needed,
+  and blocked buckets before any mode action can execute. This service is a
+  contract and Action Runtime bridge, not a direct executor.
+
+boundaries:
+  executes_mode_actions: false
+  starts_terminals: false
+  starts_services: false
+  external_send: false
+  payment: false
+  reads_secret_files: false
+  writes_runtime_artifacts: true
+
+entrypoints:
+  contract_reader: "<your-backend>"
+  action_runtime: "<your-backend>"
+  api:
+    - POST /api/action-runtime/mode-runner-candidates
+  ops_overview: "<your-backend>"
+
+contracts:
+  mode_specs: []
+  schema: ""
+  permission_matrix: ""
+
+runtime_status_mapping:
+  allow: queued
+  needs_approval: needs_approval
+  blocked: blocked
+
+display:
+  user_surface: 운영 계기판
+  labels:
+    queued: 안전 후보
+    needs_approval: 승인 필요
+    blocked: 차단
+  show_known_modes: true
+  show_latest_candidate: true
+
+tests: []
+
+notes:
+  - Mode Runner may record local artifacts so the operator can inspect a mode
+    plan, but it must not perform the mode action from this bridge.
+  - T3/T4 actions remain non-auto even when they appear in a mode contract.

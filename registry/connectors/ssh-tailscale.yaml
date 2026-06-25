@@ -1,0 +1,49 @@
+contract: willind.connector.ssh_tailscale
+version: 0.1.0
+updated: 2026-06-14
+
+connector:
+  id: ssh-tailscale
+  display_name: SSH / Tailscale SSH
+  kind: remote_device_connector
+  priority: P2
+  status: planned_disabled
+  owner_scope: user_owned_registered_devices
+
+read:
+  status: planned_disabled
+  permission_required: allow
+  notes: pwd, ls, find, cat non-secret, grep non-secret, uname, df, top status.
+draft:
+  status: planned_disabled
+  permission_required: allow
+  notes: Remote command plans and dry-run previews are safe.
+write:
+  status: planned_disabled
+  permission_required: confirm
+  notes: File edits, mkdir, installs, process control, and service restart need confirmation.
+send:
+  status: planned_disabled
+  permission_required: confirm
+  notes: curl, wget, git remote write, or external network calls are gated.
+delete:
+  status: planned_disabled
+  permission_required: confirm_or_block
+  notes: Remote delete is destructive and requires explicit target.
+payment:
+  status: blocked
+  permission_required: blocked
+  notes: Billing, subscription, or account changes are blocked here.
+
+secret_env_names:
+  - TAILSCALE_AUTHKEY
+  - SSH_AUTH_SOCK
+  - WILLIND_REMOTE_HOSTS
+
+permission_required:
+  read: allow
+  draft: allow
+  write: confirm
+  send: confirm
+  delete: confirm_or_block
+  payment: blocked

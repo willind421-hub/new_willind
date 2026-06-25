@@ -1,0 +1,59 @@
+id: architecture-review
+version: 0.1.0
+status: active_contract
+purpose: >
+  Review structure, folder routing, provider independence, and long-term
+  maintainability before implementation or large movement.
+when_to_use:
+  - folder_structure_change
+  - provider_or_skill_kernel_change
+  - cross_project_contract_change
+  - new_runtime_service_or_gateway
+  - unclear_spine_or_registry_decision
+when_not_to_use:
+  - one_line_code_fix
+  - simple_file_lookup
+  - pure_visual_style_tweak
+  - already_decided_safe_cleanup
+input_contract:
+  required:
+    - decision_context
+    - affected_paths_or_systems
+  optional:
+    - alternatives
+    - current_registry_entries
+output_contract:
+  required:
+    - recommended_direction
+    - rejected_options
+    - migration_risks
+    - validation_needed
+hook_timing:
+  - intent_detected
+  - context_load
+  - pre_model
+  - post_model
+permission_tier:
+  default: T1_decision_support
+  auto_allowed:
+    - observation
+    - proposal
+    - draft
+  requires_confirmation:
+    - irreversible_structure_move
+    - live_service_contract_change
+provider_preferences:
+  primary: claude_cli
+  reviewers:
+    - codex_cli
+  fallback:
+    - openai_api
+  notes: Strong reasoning provider first; Codex verifies concrete repo impact.
+storage_policy:
+  registry_updates: registry
+  traces: runtime/traces
+tests_or_validation:
+  - check_registry_references
+  - run_relevant_contract_or_path_verifier
+  - identify_existing_code_dependencies_before_move
+

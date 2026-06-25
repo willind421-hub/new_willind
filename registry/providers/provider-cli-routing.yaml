@@ -1,0 +1,395 @@
+contract: willind.provider_cli_routing
+version: 0.1.0
+updated: 2026-05-24
+
+principle:
+  registry_role: Registry is the routing center for provider, CLI, browser, local runtime, and multi-agent selection.
+  route_by_task_not_model: true
+  benchmark_is_signal_not_truth: true
+  subscription_is_capacity_not_identity: true
+  skill_selects_capability_router_selects_provider: true
+  paid_route_changes_need_trace: true
+  deterministic_first_for_monitoring: true
+  default_rule: Pick the smallest reliable route; escalate only when ambiguity, risk, or value justifies it.
+
+providers:
+  willind_ai_rules:
+    kind: local_rule_engine
+    status: active
+    cost_posture: free_local
+    strengths: [wake_command, simple_intent, panel_composition, fast_path, low_latency]
+    weaknesses: [deep_reasoning, novel_planning, ambiguous_user_goal]
+    default_weight: 0.78
+    safety:
+      external_send: blocked
+      file_write: needs_trace
+      paid_action: blocked
+
+  codex_cli:
+    kind: cli
+    status: active
+    cost_posture: subscription_primary
+    strengths: [coding_implementation, repo_edit, tests, smoke, refactor, terminal_work]
+    weaknesses: [large_visual_style_judgment, emotional_context, long_persona_memory]
+    default_weight: 0.86
+    safety:
+      external_send: needs_approval
+      file_write: allowed_with_trace
+      paid_action: blocked
+
+  claude_cli:
+    kind: cli
+    status: limited
+    cost_posture: subscription_limited
+    strengths: [architecture_review, requirement_clarification, korean_structuring, critique, planning]
+    weaknesses: [quota_limited, long_running_implementation]
+    default_weight: 0.58
+    safety:
+      external_send: needs_approval
+      file_write: allowed_with_trace
+      paid_action: blocked
+
+  openai_api:
+    kind: api
+    status: optional
+    cost_posture: metered_paid
+    strengths: [general_reasoning, synthesis, structured_output, fanout_chat]
+    weaknesses: [cost_growth, key_management]
+    default_weight: 0.62
+    safety:
+      external_send: needs_approval
+      file_write: via_runtime_only
+      paid_action: blocked
+
+  gemini_api_or_browser:
+    kind: api_or_browser
+    status: optional
+    cost_posture: mixed
+    strengths: [video_image_research, youtube_context, multimodal_reference, broad_research]
+    weaknesses: [browser_session_fragility, output_variance]
+    default_weight: 0.66
+    safety:
+      external_send: needs_approval
+      file_write: via_runtime_only
+      paid_action: blocked
+
+  local_llm:
+    kind: local_model
+    status: optional
+    cost_posture: free_local_compute
+    strengths: [private_draft, cheap_question, offline_summary, repeated_classification]
+    weaknesses: [quality_variance, hardware_cost, weak_tool_use]
+    default_weight: 0.48
+    safety:
+      external_send: blocked
+      file_write: via_runtime_only
+      paid_action: blocked
+
+  groq_api:
+    kind: api
+    status: active
+    cost_posture: free_fast_api
+    strengths: [fast_classification, json_extraction, intent_routing, low_latency_judgment, summary]
+    weaknesses: [deep_reasoning, long_context, tool_use, large_planning]
+    default_weight: 0.74
+    safety:
+      external_send: needs_approval
+      file_write: via_runtime_only
+      paid_action: blocked
+
+  browser_session:
+    kind: browser
+    status: active
+    cost_posture: free_but_time_cost
+    strengths: [public_research, login_session_view, screenshot_capture, official_docs_check]
+    weaknesses: [captcha, session_expiry, ui_change]
+    default_weight: 0.52
+    safety:
+      external_send: needs_approval
+      account_action: blocked
+      paid_action: blocked
+
+  service_supervisor:
+    kind: local_runtime
+    status: active
+    cost_posture: free_local
+    strengths: [health_check, port_state, lifecycle_status, log_tail]
+    weaknesses: [cannot_reason_deeply]
+    default_weight: 0.80
+    safety:
+      stop_restart: dry_run_default
+      destructive_action: needs_approval
+
+  tool_slot_runtime:
+    kind: local_runtime
+    status: active
+    cost_posture: free_local
+    strengths: [tool_health, permission_profile, artifact_write, runtime_bridge]
+    weaknesses: [depends_on_registered_tools]
+    default_weight: 0.76
+    safety:
+      run_tool: permission_profile_required
+      external_send: needs_approval
+
+task_classes:
+  structured_classification:
+    label: 구조화 분류/추출
+    triggers:
+      - "(?i)(분류|classify|추출|extract|판정|태깅|라벨|JSON)"
+    preset: cheap_single
+    primary: [local_llm, groq_api]
+    fallback: [openai_api, codex_cli]
+    budget_tier: low
+    risk_tier: T1
+    notes: JSON·분류·추출 같은 구조화 작업은 빠른 비추론 모델 우선. local 우선(프라이버시), 없으면 groq. codex는 메타응답 경향이라 최후.
+
+  quick_question:
+    label: 빠른 질문
+    triggers:
+      - "(?i)(간단|빨리|뭐야|뜻|설명|학교|과제|숙제)"
+    preset: cheap_single
+    primary: [willind_ai_rules, local_llm, openai_api]
+    fallback: [claude_cli]
+    budget_tier: low
+    risk_tier: T0
+    notes: 빠른 답변은 로컬/저비용 우선. 깊은 판단이 필요하면 승격.
+
+  document_summary:
+    label: 문서 요약
+    triggers:
+      - "(?i)(문서|PDF|docx|txt|요약|summary)"
+    preset: cheap_single
+    primary: [local_llm, groq_api]
+    fallback: [openai_api, codex_cli]
+    budget_tier: low
+    risk_tier: T1
+    notes: 프로젝트 문서 요약은 로컬/저비용 provider 우선. 원문 전체 전송은 호출자가 청크와 길이를 제한한다.
+
+  document_qa:
+    label: 문서 근거 질의응답
+    triggers:
+      - "(?i)(문서|PDF|docx|txt|질문|질의|Q&A|출처|page|페이지)"
+    preset: cheap_single
+    primary: [local_llm, groq_api]
+    fallback: [openai_api, codex_cli]
+    budget_tier: low
+    risk_tier: T1
+    notes: 검색된 관련 청크만 provider에 전달하고 답변에는 출처 페이지를 붙인다.
+
+  image_ocr_analysis:
+    label: 이미지 OCR 분석
+    triggers:
+      - "(?i)(OCR|tesseract|스크린샷|이미지.*텍스트|화면.*텍스트|image.*ocr)"
+    preset: cheap_single
+    primary: [local_llm, groq_api]
+    fallback: [openai_api, codex_cli]
+    budget_tier: low
+    risk_tier: T1
+    notes: tesseract로 로컬 OCR 후 OCR 원문은 untrusted data wrapper로 감싸 model_gateway에 전달한다.
+
+  coding_implementation:
+    label: 코딩 구현
+    triggers:
+      - "(?i)(코딩|구현|고쳐|수정|테스트|빌드|리팩터|refactor|pytest|npm|버그|에러|오류)"
+    preset: codex_primary_review_optional
+    primary: [codex_cli]
+    reviewers: [claude_cli]
+    fallback: [openai_api]
+    budget_tier: medium
+    risk_tier: T2
+    notes: Codex가 구현과 테스트를 맡고, 설계/위험이 애매하면 Claude 또는 GPT가 검토.
+
+  architecture_review:
+    label: 구조 판단
+    triggers:
+      - "(?i)(구조|설계|아키텍처|방향|판단|비교|맞나|어떻게 가야|폴더|척추|registry)"
+    preset: two_model_debate
+    primary: [claude_cli, openai_api]
+    fallback: [codex_cli]
+    budget_tier: medium
+    risk_tier: T1
+    notes: 구현 전 판단은 두 관점을 비교하고 결과만 압축.
+
+  visual_ui_research:
+    label: 시각/UI 리서치
+    triggers:
+      - "(?i)(UI|UX|디자인|스샷|스크린샷|레퍼런스|이미지|영상|유튜브|핀터레스트|화면|창)"
+    preset: multimodal_research_synthesis
+    primary: [gemini_api_or_browser, browser_session]
+    reviewers: [claude_cli, openai_api]
+    fallback: [codex_cli]
+    budget_tier: medium
+    risk_tier: T1
+    notes: 영상/이미지 해석은 멀티모달 우선. 실제 코드 반영은 Codex로 분리.
+
+  money_opportunity:
+    label: 돈 벌 기회
+    triggers:
+      - "(?i)(돈|수익|사업|외주|기회|시장|가격|랜딩|판매|매출|비용|가성비)"
+    preset: research_debate_with_permission_gate
+    primary: [browser_session, openai_api, claude_cli]
+    implementers: [codex_cli]
+    fallback: [local_llm]
+    budget_tier: guarded
+    risk_tier: T3
+    notes: 관찰, 제안, 초안, 작은 실험, 측정은 가능. 돈/외부전송/파괴는 승인 필요.
+
+  monitoring_ops:
+    label: 관측/운영
+    triggers:
+      - "(?i)(모니터링|헬스|health|포트|서버|프로세스|로그|죽었|안켜|흰 화면|502|Bad Gateway)"
+    preset: local_probe_then_agent
+    primary: [service_supervisor, willind_ai_rules]
+    fallback: [codex_cli, claude_cli]
+    budget_tier: low
+    risk_tier: T2
+    notes: 24시간 감시는 deterministic 우선. 이상이 생겼을 때만 AI 검토.
+
+  workflow_or_skill_intake:
+    label: 스킬/워크플로 흡수
+    triggers:
+      - "(?i)(스킬|plugin|플러그인|superpowers|gstack|harness|MCP|워크플로|훅|hook)"
+    preset: registry_first_review
+    primary: [codex_cli, claude_cli]
+    fallback: [openai_api]
+    budget_tier: medium
+    risk_tier: T2
+    notes: 원본은 imported, 적용은 adapter/composed, 실행은 permission profile을 통과.
+
+  private_memory_analysis:
+    label: 개인 데이터 분석
+    triggers:
+      - "(?i)(내 데이터|대화 내역|성향|개인화|기억|메모리|분석본|export|json|html)"
+    preset: private_local_first
+    primary: [local_llm, willind_ai_rules]
+    reviewers: [claude_cli, openai_api]
+    fallback: [codex_cli]
+    budget_tier: guarded
+    risk_tier: T3
+    notes: 원문은 로컬 보존. 외부 provider로 보낼 때는 요약/익명화/승인 우선.
+
+  browser_or_app_action:
+    label: 브라우저/앱 조작
+    triggers:
+      - "(?i)(브라우저|열어|틀어|유튜브|로그인|검색해|클릭|다운로드|캡처|스크린)"
+    preset: browser_with_permission_gate
+    primary: [browser_session, tool_slot_runtime]
+    fallback: [codex_cli]
+    budget_tier: low
+    risk_tier: T3
+    notes: 열람과 캡처는 가능. 댓글/DM/저장/팔로우/결제/계정 변경은 차단 또는 승인.
+
+multi_agent_presets:
+  cheap_single:
+    shape: one_fast_answer
+    max_agents: 1
+    coordinator: willind_ai_rules
+    synthesis: direct_answer
+
+  codex_primary_review_optional:
+    shape: implement_then_optional_review
+    max_agents: 2
+    coordinator: codex_cli
+    review_condition: ambiguity_or_high_blast_radius
+    synthesis: changed_files_tests_risks
+
+  two_model_debate:
+    shape: independent_opinions_then_synthesis
+    max_agents: 2
+    coordinator: willind_orchestrator
+    synthesis: compare_tradeoffs_then_decision
+
+  multimodal_research_synthesis:
+    shape: gather_visual_sources_then_summarize
+    max_agents: 3
+    coordinator: browser_session
+    synthesis: evidence_to_design_or_research_rule
+
+  research_debate_with_permission_gate:
+    shape: observe_propose_draft_measure
+    max_agents: 4
+    coordinator: willind_orchestrator
+    permission_gate:
+      auto: [observe, propose, draft, local_experiment, measure]
+      needs_approval: [external_send, money_execution, account_action, publish]
+    synthesis: opportunity_brief_with_next_experiment
+
+  local_probe_then_agent:
+    shape: deterministic_probe_first
+    max_agents: 2
+    coordinator: service_supervisor
+    escalation_condition: repeated_error_or_recovery_needed
+    synthesis: anomaly_summary_and_recovery_plan
+
+  registry_first_review:
+    shape: register_source_then_adapter_plan
+    max_agents: 3
+    coordinator: codex_cli
+    synthesis: registry_entry_contract_adapter_tests
+
+  private_local_first:
+    shape: local_parse_then_limited_external_review
+    max_agents: 2
+    coordinator: willind_ai_rules
+    privacy_rule: raw_never_leaves_without_explicit_approval
+    synthesis: redacted_profile_update_candidates
+
+  browser_with_permission_gate:
+    shape: controlled_browser_action
+    max_agents: 2
+    coordinator: browser_session
+    permission_gate:
+      auto: [read_public_page, capture_screenshot, extract_text]
+      needs_approval: [login_use, download, upload, external_send]
+      blocked: [captcha_bypass, payment, account_setting_change, dm, comment, follow]
+    synthesis: browser_result_with_source
+
+benchmark_metrics:
+  - coding_pass_rate
+  - test_fix_success
+  - korean_clarity
+  - latency
+  - cost
+  - quota_stability
+  - tool_call_reliability
+  - visual_reasoning
+  - long_context
+  - privacy_fit
+
+weekly_update:
+  cadence: weekly_or_on_major_provider_change
+  input_sources:
+    - public_benchmark
+    - provider_release_note
+    - community_feedback
+    - willind_task_result
+    - cost_quota_log
+    - user_correction_pattern
+  output: registry/providers/provider-weights.snapshot.yaml
+  can_change:
+    - default_weight
+    - fallback_order
+    - reviewer_threshold
+    - task_class_notes
+  cannot_change_without_approval:
+    - paid_default_route
+    - external_send_behavior
+    - secret_handling
+    - account_action_behavior
+    - subscription_purchase
+
+decision_trace:
+  required_fields:
+    - task_class
+    - selected_preset
+    - primary_provider
+    - fallback_chain
+    - cost_tier
+    - risk_tier
+    - reason
+    - benchmark_snapshot
+    - permission_decision
+
+verification:
+  routing_policy: scripts/operations/providers/suggest-provider-route.py --self-test
+  registry_policy: scripts/operations/providers/verify-provider-routing.py

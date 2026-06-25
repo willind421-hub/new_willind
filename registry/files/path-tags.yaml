@@ -1,0 +1,735 @@
+contract: willind.path_tags
+version: 0.1.1
+updated: 2026-05-30
+
+principle:
+  registry_role: Registry is the routing center for Willind paths.
+  purpose: Give agents a stable map before they read, write, move, or archive files.
+  rule: Prefer semantic tags over guessing from folder names.
+  placement_rule: >
+    File location is decided by "which work created it?". The file nests under that
+    project, and the project sits inside its domain: domain > project > file
+    (e.g. 일/youtube-channel/thumbnail.jpg). Coding work goes to projects/ instead.
+    Media-type grouping (video/image) is not a folder axis.
+  secret_rule: Never read or relocate secret/profile/model paths unless the user explicitly asks.
+
+tag_schema:
+  kind:
+    - system_rule
+    - registry
+    - capability_source
+    - workflow_definition
+    - reality_domain
+    - output
+    - runtime_trace
+    - reference
+    - project
+    - active_compat_project
+    - data_raw
+    - data_processed
+    - launcher
+    - operation_script
+    - archive
+    - backup
+    - private_tool_state
+    - secret_store
+    - heavy_asset
+  lifecycle:
+    - permanent
+    - active
+    - generated
+    - temporary
+    - archived
+    - imported_source
+    - derived
+    - locked_pending_cleanup
+  safety:
+    - safe_read
+    - safe_write
+    - review_before_write
+    - do_not_move
+    - do_not_read_content
+    - explicit_confirmation_required
+  actor_use:
+    - human
+    - agent
+    - service
+    - connector
+    - test
+  visibility:
+    - user_visible
+    - agent_internal
+    - service_internal
+    - private
+
+paths:
+  - path: registry
+    name: Registry
+    kind: registry
+    lifecycle: permanent
+    safety: review_before_write
+    actor_use: [human, agent, service]
+    visibility: agent_internal
+    owner: willind-core
+    intent: Path, skill, data, service, and terminology contracts.
+    write_policy: Update deliberately with validation.
+
+  - path: core
+    name: Core
+    kind: system_rule
+    lifecycle: permanent
+    safety: review_before_write
+    actor_use: [agent, service]
+    visibility: agent_internal
+    owner: willind-core
+    intent: Low-level adapters, policies, and reusable system helpers.
+    write_policy: Code or policy changes need tests or syntax validation.
+
+  - path: capabilities
+    name: Capabilities
+    kind: capability_source
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent, service]
+    visibility: agent_internal
+    owner: willind-capability-hub
+    intent: Imported skills, composed skills, role capabilities, MCP definitions, and deprecated sources.
+    write_policy: Imported originals stay intact; composed entries describe Willind usage.
+
+  - path: capabilities/imported
+    name: Imported Capability Sources
+    kind: capability_source
+    lifecycle: imported_source
+    safety: review_before_write
+    actor_use: [agent]
+    visibility: agent_internal
+    owner: willind-capability-hub
+    intent: Original external or legacy skill sources kept without mixing into live behavior.
+    write_policy: Do not rewrite source behavior here; wrap it through adapters or composed capabilities.
+
+  - path: capabilities/composed
+    name: Composed Capabilities
+    kind: capability_source
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent, service]
+    visibility: agent_internal
+    owner: willind-capability-hub
+    intent: Willind-native combinations of imported skills, policies, and tools.
+    write_policy: New reusable abilities should land here after source review.
+
+  - path: capabilities/mcp
+    name: MCP Capability Definitions
+    kind: capability_source
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent, service]
+    visibility: agent_internal
+    owner: willind-capability-hub
+    intent: MCP server/tool definitions and mapping notes.
+    write_policy: Register transport, permission tier, and expected data shape.
+
+  - path: capabilities/roles
+    name: Role Capabilities
+    kind: capability_source
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent]
+    visibility: agent_internal
+    owner: willind-capability-hub
+    intent: Non-roleplay responsibilities extracted from old department files.
+    write_policy: Keep roles provider-agnostic; provider-specific execution belongs in adapters.
+
+  - path: workflows
+    name: Workflows
+    kind: workflow_definition
+    lifecycle: permanent
+    safety: review_before_write
+    actor_use: [human, agent]
+    visibility: agent_internal
+    owner: willind-workflow
+    intent: Repeatable procedures made from capabilities.
+    write_policy: Store procedure, trigger, inputs, outputs, and permission tier.
+
+  - path: reality
+    name: Reality Domains (root concept)
+    kind: reality_domain
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [human, agent]
+    visibility: user_visible
+    owner: user
+    intent: >
+      Life domains hold non-coding work. Default examples below: 개인(personal),
+      일(work), 학습(learning), 재정(finance). Users add or rename to fit their life.
+      A file's location is decided by "which work created it?": it nests under that
+      project, and the project sits inside its domain (domain > project > file).
+      Coding work goes to projects/ instead. Media type (video/image) is not a folder axis.
+    write_policy: Add links to source data and outputs instead of duplicating large raw files.
+
+  - path: 개인
+    name: Personal Domain
+    kind: reality_domain
+    lifecycle: active
+    safety: explicit_confirmation_required
+    actor_use: [human]
+    visibility: private
+    owner: user
+    intent: Personal user-controlled material. Projects nest inside (e.g. 개인/blog/).
+    write_policy: Do not reorganize automatically.
+
+  - path: 일
+    name: Work Domain
+    kind: reality_domain
+    lifecycle: active
+    safety: explicit_confirmation_required
+    actor_use: [human, agent]
+    visibility: private
+    owner: user
+    intent: >
+      Work and job material. Projects nest inside (e.g. 일/youtube-channel/).
+      Non-coding work assets live here, not in projects/.
+    write_policy: Move or rewrite only when the user asks.
+
+  - path: 학습
+    name: Learning Domain
+    kind: reality_domain
+    lifecycle: active
+    safety: explicit_confirmation_required
+    actor_use: [human, agent]
+    visibility: private
+    owner: user
+    intent: Study and learning material. Projects nest inside (e.g. 학습/course-name/).
+    write_policy: Move or rewrite only when the user asks.
+
+  - path: 재정
+    name: Finance Domain
+    kind: reality_domain
+    lifecycle: active
+    safety: explicit_confirmation_required
+    actor_use: [human, agent]
+    visibility: private
+    owner: user
+    intent: Money and finance material. Projects nest inside (e.g. 재정/budget-2026/).
+    write_policy: Move or rewrite only when the user asks.
+
+  - path: outputs
+    name: Outputs
+    kind: output
+    lifecycle: permanent
+    safety: safe_write
+    actor_use: [human, agent]
+    visibility: user_visible
+    owner: willind-output
+    intent: Final reports, PPTX, images, videos, exports, and user-facing deliverables.
+    write_policy: Only final or reviewed artifacts; temporary files belong in runtime.
+
+  - path: runtime
+    name: Runtime
+    kind: runtime_trace
+    lifecycle: generated
+    safety: safe_write
+    actor_use: [agent, service, test]
+    visibility: service_internal
+    owner: willind-runtime
+    intent: Logs, cleanup records, temporary workspaces, traces, generated intermediate files.
+    write_policy: Safe to create; cleanup by TTL or specific cleanup documents.
+
+  - path: runtime/generated-workspaces
+    name: Generated Workspaces
+    kind: runtime_trace
+    lifecycle: temporary
+    safety: safe_write
+    actor_use: [agent, service, test]
+    visibility: service_internal
+    owner: willind-runtime
+    intent: Scratch areas for tools that create many files.
+    write_policy: New uncontrolled tool output should start here, then reviewed files move to outputs or capabilities.
+
+  - path: runtime/cleanup
+    name: Cleanup Logs
+    kind: runtime_trace
+    lifecycle: permanent
+    safety: safe_write
+    actor_use: [agent]
+    visibility: agent_internal
+    owner: willind-runtime
+    intent: Audit trail for file movement and cleanup decisions.
+    write_policy: Append structured logs; do not delete without backup.
+
+  - path: runtime/handoff
+    name: Runtime Handoff
+    kind: runtime_trace
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [human, agent, service]
+    visibility: agent_internal
+    owner: willind-orchestration
+    intent: Canonical home for active task rooms, debate rooms, CLI handoffs, inboxes, and cross-agent state.
+    write_policy: Use this path for new handoff data; C:\new_willind\handoff remains a compatibility junction.
+
+  - path: runtime/workspaces
+    name: Runtime Workspaces
+    kind: runtime_trace
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [human, agent, service]
+    visibility: agent_internal
+    owner: willind-runtime
+    intent: Canonical home for temporary and task workspaces.
+    write_policy: Use this path for new generated workspaces; C:\new_willind\workspaces remains a compatibility junction.
+
+  - path: references
+    name: References
+    kind: reference
+    lifecycle: permanent
+    safety: safe_write
+    actor_use: [human, agent]
+    visibility: agent_internal
+    owner: willind-research
+    intent: External references, UIUX images, research notes, benchmark material, reusable examples.
+    write_policy: Store source URL or provenance when available.
+
+  - path: references/uiux
+    name: UIUX References
+    kind: reference
+    lifecycle: permanent
+    safety: safe_write
+    actor_use: [human, agent]
+    visibility: agent_internal
+    owner: willind-design
+    intent: Visual reference sets, motion prototypes, UI density references.
+    write_policy: Keep references separate from implemented UI.
+
+  - path: data
+    name: Data
+    kind: data_processed
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent, service]
+    visibility: service_internal
+    owner: willind-data
+    intent: Raw and processed datasets shared across Willind.
+    write_policy: Raw files are preserved; processed files can be regenerated when scripts are recorded.
+
+  - path: data/raw
+    name: Raw Data
+    kind: data_raw
+    lifecycle: permanent
+    safety: review_before_write
+    actor_use: [agent, service]
+    visibility: service_internal
+    owner: willind-data
+    intent: Original exports, captures, voice samples, and source evidence.
+    write_policy: Preserve original bytes where practical; never replace silently.
+
+  - path: akashic_raw
+    name: Akashic Raw Vault
+    kind: data_raw
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent, service]
+    visibility: service_internal
+    owner: willind-akashic-collector
+    intent: Resumable external raw-byte collection vault with manifest.jsonl, per-source source.json, original bytes, and logs.
+    write_policy: Preserve original bytes; manifest schema is fixed and does not contain truth, score, or viewpoint fields.
+
+  - path: data/processed
+    name: Processed Data
+    kind: data_processed
+    lifecycle: derived
+    safety: review_before_write
+    actor_use: [agent, service]
+    visibility: service_internal
+    owner: willind-data
+    intent: Parsed, redacted, integrated, indexed, or analyzed data.
+    write_policy: Record generating script and source path.
+
+  - path: docs
+    name: Documentation
+    kind: reference
+    lifecycle: permanent
+    safety: review_before_write
+    actor_use: [human, agent]
+    visibility: user_visible
+    owner: willind-docs
+    intent: Plans, operations, history, troubleshooting, briefs, and human-readable records.
+    write_policy: Prefer concise current docs; old large dumps should be indexed or archived.
+
+  - path: projects
+    name: Projects (coding only)
+    kind: project
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent, service, test]
+    visibility: agent_internal
+    owner: project-owned
+    intent: >
+      Coding/development projects only - apps, services, tools, MCP servers (e.g.
+      willind-mcp). Non-coding work (videos, documents, thumbnails) does NOT go here;
+      it nests under a life domain instead.
+    write_policy: Keep project-internal tests, scripts, package files, and DBs inside owner project unless a registry migration exists.
+
+  - path: scripts
+    name: Operation Scripts
+    kind: operation_script
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [human, agent, service]
+    visibility: agent_internal
+    owner: willind-operations
+    intent: Root-level operational scripts grouped by responsibility.
+    write_policy: Keep small shared operations here; project-specific scripts belong inside projects.
+
+  - path: scripts/operations/command-center
+    name: Command Center Scripts
+    kind: operation_script
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [human, agent, service]
+    visibility: agent_internal
+    owner: willind-command-center
+    intent: Start, stop, restart, health, and second-floor verification scripts.
+    write_policy: Launcher references must be updated when files move.
+
+  - path: scripts/operations/database
+    name: Database Operation Scripts
+    kind: operation_script
+    lifecycle: active
+    safety: explicit_confirmation_required
+    actor_use: [agent, service]
+    visibility: service_internal
+    owner: willind-data
+    intent: DB backup, WAL setup, and DB smoke checks.
+    write_policy: Dry-run or check-only before destructive DB operations.
+
+  - path: scripts/operations/security
+    name: Security Operation Scripts
+    kind: operation_script
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent, service]
+    visibility: service_internal
+    owner: willind-security
+    intent: Secret scanning and repository hygiene helpers.
+    write_policy: Keep deny patterns conservative.
+
+  - path: scripts/research
+    name: Research Scripts
+    kind: operation_script
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent]
+    visibility: agent_internal
+    owner: willind-research
+    intent: Corpus collection, synthesis, and research browser helpers.
+    write_policy: Public/allowed material only unless the user explicitly authorizes a broader source.
+
+  - path: launchers
+    name: Launchers
+    kind: launcher
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [human]
+    visibility: user_visible
+    owner: willind-operations
+    intent: User-facing shortcut files.
+    write_policy: Keep indexed in registry/services/launcher-index.yaml.
+
+  - path: launchers/root
+    name: Root Launchers
+    kind: launcher
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [human]
+    visibility: user_visible
+    owner: willind-operations
+    intent: Start, stop, restart, health, and verification shortcuts.
+    write_policy: Validate target path after each move.
+
+  - path: archive
+    name: Archive
+    kind: archive
+    lifecycle: archived
+    safety: review_before_write
+    actor_use: [human, agent]
+    visibility: agent_internal
+    owner: willind-archive
+    intent: Deprecated, rollback, legacy, or preservation-only material.
+    write_policy: Do not depend on archived paths for live runtime.
+
+  - path: backup
+    name: Backup
+    kind: backup
+    lifecycle: permanent
+    safety: do_not_move
+    actor_use: [human, service]
+    visibility: private
+    owner: user
+    intent: Backup artifacts and recovery material.
+    write_policy: Backup service owns retention policy.
+
+  - path: config
+    name: Config
+    kind: system_rule
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent, service]
+    visibility: agent_internal
+    owner: willind-config
+    intent: Runtime configuration and mode/provider settings not yet migrated into Registry.
+    write_policy: Prefer env override for secrets; no secret values in tracked configs.
+
+  - path: handoff
+    name: Handoff
+    kind: runtime_trace
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [human, agent, service]
+    visibility: agent_internal
+    owner: willind-orchestration
+    intent: Active task rooms, debate rooms, CLI handoffs, inboxes, and cross-agent state.
+    write_policy: Keep until orchestration store migrates; do not casually archive active rooms.
+
+  - path: workspaces
+    name: Workspaces
+    kind: runtime_trace
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [human, agent]
+    visibility: agent_internal
+    owner: user
+    intent: User-recognizable work slots and generated task workspaces.
+    write_policy: Keep as a stable user slot until runtime workspace policy changes.
+
+  - path: worktrees
+    name: Worktrees
+    kind: runtime_trace
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent, service]
+    visibility: agent_internal
+    owner: willind-orchestration
+    intent: Isolated git worktrees and parallel task checkouts used by coding rooms and multi-agent runs.
+    write_policy: Create per task or room; remove only after merge, archive, or explicit cleanup record.
+
+  - path: artifacts
+    name: Legacy Artifacts
+    kind: runtime_trace
+    lifecycle: locked_pending_cleanup
+    safety: do_not_move
+    actor_use: [agent, service]
+    visibility: service_internal
+    owner: willind-runtime
+    intent: Legacy UI artifacts already copied to runtime/generated-workspaces/ui-artifacts.
+    write_policy: Remove only after lock clears and canonical copy is verified.
+
+  - path: willind-mcp
+    name: Willind MCP
+    kind: active_compat_project
+    lifecycle: active
+    safety: do_not_move
+    actor_use: [service, agent]
+    visibility: service_internal
+    owner: willind-mcp
+    intent: Active MCP project and live interaction DB owner.
+    write_policy: Move only after all service paths are environment-driven.
+
+  - path: .browser-profiles
+    name: Browser Profiles
+    kind: private_tool_state
+    lifecycle: active
+    safety: do_not_read_content
+    actor_use: [service, human]
+    visibility: private
+    owner: user
+    intent: Browser login/session profiles.
+    write_policy: Do not read or relocate profile internals without explicit instruction.
+
+  - path: .claude
+    name: Claude Tool State
+    kind: private_tool_state
+    lifecycle: active
+    safety: do_not_move
+    actor_use: [agent]
+    visibility: private
+    owner: claude-code
+    intent: Claude Code local state.
+    write_policy: Leave in place unless migrating agent config deliberately.
+
+  - path: .obsidian
+    name: Obsidian Tool State
+    kind: private_tool_state
+    lifecycle: active
+    safety: do_not_move
+    actor_use: [human]
+    visibility: private
+    owner: obsidian
+    intent: Obsidian vault metadata.
+    write_policy: Leave in place.
+
+  - path: .secrets
+    name: Secrets
+    kind: secret_store
+    lifecycle: permanent
+    safety: do_not_read_content
+    actor_use: [service]
+    visibility: private
+    owner: user
+    intent: Secret material.
+    write_policy: Do not read, move, print, or archive automatically.
+
+  - path: models
+    name: Models
+    kind: heavy_asset
+    lifecycle: permanent
+    safety: do_not_move
+    actor_use: [service, agent]
+    visibility: service_internal
+    owner: user
+    intent: Large AI model files.
+    write_policy: Exclude from cleanup backup and path moves unless explicitly requested.
+
+  - path: .env
+    name: Root Env
+    kind: secret_store
+    lifecycle: active
+    safety: do_not_read_content
+    actor_use: [service]
+    visibility: private
+    owner: user
+    intent: Root runtime environment values.
+    write_policy: Stay at root by user rule.
+
+  - path: .env.example
+    name: Env Example
+    kind: system_rule
+    lifecycle: permanent
+    safety: review_before_write
+    actor_use: [human, agent]
+    visibility: user_visible
+    owner: willind-config
+    intent: Non-secret env template.
+    write_policy: Keep secret-free.
+
+  - path: .gitignore
+    name: Git Ignore
+    kind: system_rule
+    lifecycle: permanent
+    safety: review_before_write
+    actor_use: [agent]
+    visibility: agent_internal
+    owner: willind-repository
+    intent: Repository hygiene and secret/generated-file exclusion.
+    write_policy: Keep conservative.
+
+  - path: AGENTS.md
+    name: Codex Entry Rules
+    kind: system_rule
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent]
+    visibility: agent_internal
+    owner: willind-agent-compat
+    intent: Current Codex-compatible entry instructions.
+    write_policy: Keep minimal; long behavior should stay in Registry/capabilities.
+
+  - path: CLAUDE.md
+    name: Claude Entry Rules
+    kind: system_rule
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent]
+    visibility: agent_internal
+    owner: willind-agent-compat
+    intent: Current Claude-compatible entry instructions.
+    write_policy: Keep minimal; long identity and skill behavior should move to Registry/capabilities.
+
+  - path: CLAUDE-legacy.md
+    name: Claude Legacy Rules
+    kind: system_rule
+    lifecycle: archived
+    safety: review_before_write
+    actor_use: [human, agent]
+    visibility: agent_internal
+    owner: willind-agent-compat
+    intent: Preserved legacy Claude instructions excluded from the current entry path.
+    write_policy: Do not treat as live behavior; consult only for migration, audit, or rollback.
+
+  - path: ROLE.md
+    name: Legacy Role Rules
+    kind: system_rule
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent]
+    visibility: agent_internal
+    owner: willind-agent-compat
+    intent: Legacy role context.
+    write_policy: Reduce after capabilities and system prompts cover needed behavior.
+
+  - path: ROLE-legacy.md
+    name: Preserved Role Legacy Rules
+    kind: system_rule
+    lifecycle: archived
+    safety: review_before_write
+    actor_use: [human, agent]
+    visibility: agent_internal
+    owner: willind-agent-compat
+    intent: Preserved pre-convergence role context excluded from the current entry path.
+    write_policy: Do not treat as live behavior; consult only for migration, audit, or rollback.
+
+  - path: ROLE-dashboard.md
+    name: Dashboard Role Rules
+    kind: system_rule
+    lifecycle: active
+    safety: review_before_write
+    actor_use: [agent]
+    visibility: agent_internal
+    owner: willind-agent-compat
+    intent: Dashboard-specific agent context.
+    write_policy: Reduce after dashboard contracts cover needed behavior.
+
+coverage:
+  root_directories_expected:
+    - .browser-profiles
+    - .claude
+    - .obsidian
+    - .secrets
+    - 개인
+    - 일
+    - 학습
+    - 재정
+    - archive
+    - akashic_raw
+    - artifacts
+    - backup
+    - capabilities
+    - config
+    - core
+    - data
+    - docs
+    - handoff
+    - launchers
+    - models
+    - outputs
+    - projects
+    - reality
+    - references
+    - registry
+    - runtime
+    - scripts
+    - willind-mcp
+    - workflows
+    - workspaces
+    - worktrees
+  root_files_expected:
+    - .env
+    - .env.example
+    - .gitignore
+    - AGENTS.md
+    - CLAUDE-legacy.md
+    - CLAUDE.md
+    - ROLE-dashboard.md
+    - ROLE-legacy.md
+    - ROLE.md
+

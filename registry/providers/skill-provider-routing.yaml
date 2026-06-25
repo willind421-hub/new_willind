@@ -1,0 +1,160 @@
+contract: willind.skill_provider_routing
+version: 0.1.0
+updated: 2026-05-25
+
+purpose: >
+  Map Willind composed capabilities to provider roles, priority, and fallback.
+  Providers are replaceable engines; capability contracts remain stable.
+
+
+provider_roles:
+  codex:
+    canonical_id: codex_cli
+    role: implementation_and_repo_verification
+    best_for: [code_changes, tests, smoke, repo_navigation, local_script_work]
+    avoid_for: [final_payment, account_change, private_secret_review]
+    fallback_to: [openai_api, claude_cli]
+
+  claude:
+    canonical_id: claude_cli
+    role: structure_review_planning_and_critique
+    best_for: [architecture_review, korean_structuring, risk_reasoning, critique, planning_review]
+    avoid_for: [long_running_implementation_when_quota_limited, direct_external_side_effects]
+    fallback_to: [openai_api, codex_cli]
+
+  gemini:
+    canonical_id: gemini_api_or_browser
+    role: multimodal_and_broad_reference_research
+    best_for: [video_reference, image_reference, youtube_context, multimodal_search]
+    avoid_for: [file_editing_in_repo, payment, external_send]
+    fallback_to: [browser_session, openai_api, claude_cli]
+
+  local:
+    canonical_id: local_llm
+    role: cheap_private_repetition_and_classification
+    best_for: [repeated_classification, private_draft, offline_summary, cheap_fast_path]
+    avoid_for: [high_stakes_reasoning, complex_tool_use, final_business_decision]
+    fallback_to: [openai_api]
+
+  browser:
+    canonical_id: browser_session
+    role: public_web_and_login_session_observation
+    best_for: [public_research, visual_inspection, screenshot_capture, official_docs_check]
+    avoid_for: [account_setting_change, public_post, payment_without_confirmation]
+    fallback_to: [gemini_api_or_browser, openai_api]
+
+  opencode:
+    canonical_id: opencode_cli
+    role: optional_terminal_coding_runner
+    best_for: [coding_mode_runner, terminal_first_session, provider_model_config_reference, mcp_plugin_reference]
+    avoid_for: [permission_gate_bypass, direct_payment_or_send, private_secret_review]
+    fallback_to: [codex_cli, local_llm]
+
+  openhands:
+    canonical_id: openhands_workspace
+    role: optional_isolated_development_workspace_reference
+    best_for: [workspace_abstraction, local_gui_rest_pattern, sdk_cli_split, permission_rbac_reference]
+    avoid_for: [remote_or_container_start_without_gate, issue_tool_write_without_confirmation]
+    fallback_to: [codex_cli, local_llm]
+
+capability_routes:
+  coding-lite:
+    primary: codex_cli
+    reviewer: claude_cli
+    fallback: [openai_api, local_llm]
+    priority_reason: Codex handles small edits and tests fastest.
+    budget_tier: medium
+
+  architecture-review:
+    primary: claude_cli
+    reviewer: codex_cli
+    fallback: [openai_api]
+    priority_reason: Strong reasoning first, repo impact second.
+    budget_tier: medium
+
+  business-review:
+    primary: browser_session
+    reviewer: claude_cli
+    fallback: [openai_api, local_llm]
+    priority_reason: Evidence first, then reasoning and option selection.
+    budget_tier: guarded
+
+  idea-to-spec-convergence:
+    primary: claude_cli
+    reviewer: browser_session
+    implementer: codex_cli
+    fallback: [openai_api, local_llm]
+    priority_reason: Ambiguity reduction and interview structure should be reasoning-first, with browser evidence and Codex only after the seed becomes executable.
+    budget_tier: medium
+
+  research-synthesis:
+    primary: browser_session
+    reviewer: gemini_api_or_browser
+    fallback: [claude_cli, openai_api, local_llm]
+    priority_reason: Current references and multimodal material need browser or Gemini first.
+    budget_tier: medium
+
+  bounded-experiment-loop:
+    primary: codex_cli
+    reviewer: claude_cli
+    fallback: [local_llm, openai_api, browser_session]
+    priority_reason: Local experiment wiring, tests, and traces should be Codex-first; Claude reviews metric and stop condition.
+    budget_tier: guarded
+
+  external-skill-absorption:
+    primary: codex_cli
+    reviewer: claude_cli
+    fallback: [browser_session, openai_api]
+    priority_reason: Repository/source shape inspection should happen before conceptual review and runtime use.
+    budget_tier: low
+
+  agent-gateway-runtime:
+    primary: local_policy
+    reviewer: claude_cli
+    fallback: [browser_session, openai_api]
+    priority_reason: Gateway intake must be classified by local policy first; external channels are not execution authority.
+    budget_tier: guarded
+
+  app-action-draft:
+    primary: browser_session
+    reviewer: permission-review
+    fallback: [codex_cli, openai_api]
+    priority_reason: Browser observes app state; Permission Gate decides side effects.
+    budget_tier: guarded
+
+  permission-review:
+    primary: local_policy
+    reviewer: claude_cli
+    fallback: [codex_cli, openai_api]
+    priority_reason: Deterministic policy must decide first.
+    budget_tier: low
+
+  visual-ui-review:
+    primary: browser_session
+    reviewer: gemini_api_or_browser
+    implementer: codex_cli
+    fallback: [claude_cli, openai_api]
+    priority_reason: Visual inspection and implementation should be separate.
+    budget_tier: medium
+
+  session-record-closeout:
+    primary: codex_cli
+    reviewer: claude_cli
+    fallback: [local_llm]
+    priority_reason: Local markdown append and duplicate checks should be deterministic and low cost.
+    budget_tier: low
+
+fallback_policy:
+  if_primary_unavailable: use_first_available_fallback
+  if_cost_guard_triggered: prefer_local_or_subscription_provider
+  if_permission_tier_T3_or_higher: run_permission-review_before_provider_action
+  if_private_raw_data: prefer_local_or_redacted_summary_before_external_provider
+  if_provider_conflict: capability_contract_wins
+  if_all_providers_fail: report_unavailable_with_next_recovery_step
+
+trace_required:
+  - selected_capability
+  - primary_provider
+  - fallback_used
+  - permission_tier
+  - reason

@@ -1,0 +1,50 @@
+contract: willind.connector.gmail
+version: 0.1.0
+updated: 2026-06-14
+
+connector:
+  id: gmail
+  display_name: Gmail / Email
+  kind: email_connector
+  priority: P2
+  status: planned_disabled
+  owner_scope: communication
+
+read:
+  status: planned_disabled
+  permission_required: allow
+  notes: Inbox search and message metadata may be added later.
+draft:
+  status: planned_disabled
+  permission_required: allow
+  notes: Email drafts are allowed locally.
+write:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Creating remote drafts or labels changes mailbox state.
+send:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Sending email requires external-send preflight and approval.
+delete:
+  status: planned_disabled
+  permission_required: confirm_or_block
+  notes: Deleting, archiving, or marking messages is account-visible.
+payment:
+  status: blocked
+  permission_required: blocked
+  notes: Email connector must not change billing or paid mail plans.
+
+secret_env_names:
+  - GMAIL_CREDENTIALS_PATH
+  - GOOGLE_CREDENTIALS_PATH
+  - GOOGLE_OAUTH_CLIENT_FILE
+  - GMAIL_TOKEN_PATH
+
+permission_required:
+  read: allow
+  draft: allow
+  write: confirm
+  send: confirm
+  delete: confirm_or_block
+  payment: blocked

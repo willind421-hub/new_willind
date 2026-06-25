@@ -1,0 +1,91 @@
+contract: willind.launcher_index
+version: 0.1.1
+updated: 2026-05-24
+principle:
+  launcher_role: user-facing shortcut buttons
+  movement_rule: index_before_move
+  move_policy: do not move root launchers until user-facing shortcuts are replaced or confirmed
+
+launchers_root:
+  - file: finish-second-floor-phase-b-admin.bat
+    purpose: elevated command center restart, then second floor completion audit
+    risk: admin_prompt
+    canonical_target_candidate: launchers/root/finish-second-floor-phase-b-admin.bat
+  - file: fix-cloudflared.bat
+    purpose: configure/start/query cloudflared service
+    risk: service_admin
+    canonical_target_candidate: launchers/root/fix-cloudflared.bat
+  - file: health-command-center.bat
+    purpose: run command center health script
+    risk: safe_read
+    canonical_target_candidate: launchers/root/health-command-center.bat
+  - file: restart-command-center-admin.bat
+    purpose: elevated command center restart and health check
+    risk: admin_prompt
+    canonical_target_candidate: launchers/root/restart-command-center-admin.bat
+  - file: restart-command-center-visible.bat
+    purpose: restart command center in visible mode
+    risk: process_control
+    canonical_target_candidate: launchers/root/restart-command-center-visible.bat
+  - file: restart-command-center.bat
+    purpose: restart command center
+    risk: process_control
+    canonical_target_candidate: launchers/root/restart-command-center.bat
+  - file: start-claude-builder.bat
+    purpose: start Claude with builder role
+    risk: external_cli_session
+    canonical_target_candidate: launchers/root/start-claude-builder.bat
+  - file: start-claude-president.bat
+    purpose: start Claude with president role
+    risk: external_cli_session
+    canonical_target_candidate: launchers/root/start-claude-president.bat
+  - file: start-command-center-visible.bat
+    purpose: start command center visible
+    risk: process_control
+    canonical_target_candidate: launchers/root/start-command-center-visible.bat
+  - file: start-command-center.bat
+    purpose: start command center
+    risk: process_control
+    canonical_target_candidate: launchers/root/start-command-center.bat
+  - file: start-president.bat
+    purpose: start legacy president Claude session with plugin channels
+    risk: external_cli_session
+    note: contains legacy Telegram/Discord plugin channel invocation
+    canonical_target_candidate: launchers/root/start-president.bat
+  - file: stop-command-center.bat
+    purpose: stop command center
+    risk: process_control
+    canonical_target_candidate: launchers/root/stop-command-center.bat
+  - file: verify-second-floor-browser.bat
+    purpose: run second floor browser verification
+    risk: safe_test
+    canonical_target_candidate: launchers/root/verify-second-floor-browser.bat
+  - file: verify-second-floor-complete.bat
+    purpose: run full second floor completion verification
+    risk: safe_test
+    canonical_target_candidate: launchers/root/verify-second-floor-complete.bat
+  - file: verify-second-floor-runtime.bat
+    purpose: run backend command center smoke
+    risk: safe_test
+    canonical_target_candidate: launchers/root/verify-second-floor-runtime.bat
+  - file: verify-second-floor-source-contract.bat
+    purpose: run second floor source contract verification
+    risk: safe_test
+    canonical_target_candidate: launchers/root/verify-second-floor-source-contract.bat
+  - file: watch-command-center-logs.bat
+    purpose: tail legacy daemon/backend/MCP logs
+    risk: safe_read
+    canonical_target_candidate: launchers/root/watch-command-center-logs.bat
+
+existing_launchers_dir:
+  state: service_launchers_only
+  files:
+    - launchers/root/*
+  archived_legacy_department_launchers:
+    path: archive/legacy/department-launchers-20260524
+    reason: legacy launchers pointed to deleted roles/* folders.
+    log: runtime/cleanup/legacy-department-launchers-archive-log-20260524.json
+
+next_step:
+  - keep launchers/root for service start/stop/verify shortcuts until command-center fully replaces them.
+  - extract useful legacy department behavior into capabilities/roles before deleting archive.

@@ -1,0 +1,73 @@
+id: coding-lite
+version: 0.1.0
+status: active_contract
+purpose: >
+  Handle small, low-risk coding work quickly with Codex-first implementation,
+  local tests, and concise user-facing reporting.
+when_to_use:
+  - single_file_bug_fix
+  - small_test_or_lint_fix
+  - simple_script_adjustment
+  - local_compile_or_smoke_check
+  - short_code_explanation_with_file_context
+when_not_to_use:
+  - broad_architecture_change
+  - money_or_account_action
+  - destructive_file_cleanup
+  - external_send_or_deploy
+  - visual_design_direction_judgment
+input_contract:
+  required:
+    - goal
+    - worktree
+  optional:
+    - target_files
+    - test_commands
+    - failure_log
+output_contract:
+  required:
+    - changed_files_or_no_change_reason
+    - validation_result
+    - user_summary
+  optional:
+    - risks
+    - followup
+hook_timing:
+  - intent_detected
+  - pre_model
+  - pre_tool
+  - post_tool
+  - error
+permission_tier:
+  default: T2_trace_required
+  auto_allowed:
+    - observation
+    - proposal
+    - draft
+    - local_test_run
+  requires_confirmation:
+    - broad_file_write
+    - service_restart
+    - git_commit_or_push
+  blocked_without_explicit_approval:
+    - delete
+    - external_send
+    - payment
+provider_preferences:
+  primary: codex_cli
+  reviewers:
+    - claude_cli
+  fallback:
+    - openai_api
+    - local_llm
+  notes: Codex is preferred for implementation. Claude is optional for structure or risk review.
+storage_policy:
+  traces: runtime/traces
+  logs: runtime/logs
+  project_docs: projects/<project>/docs/planning/execution
+  final_outputs: outputs
+tests_or_validation:
+  - run_relevant_unit_or_smoke_test_when_available
+  - compile_changed_python_or_typescript_when_possible
+  - report_unrun_tests_explicitly
+

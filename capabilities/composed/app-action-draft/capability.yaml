@@ -1,0 +1,73 @@
+id: app-action-draft
+version: 0.1.0
+status: active_contract
+purpose: >
+  Prepare app, browser, shopping, ticketing, calendar, mail, or external-service
+  actions up to observation, recommendation, and draft without final execution.
+when_to_use:
+  - compare_products_or_parts
+  - prepare_ticket_or_booking_options
+  - draft_email_or_message
+  - prepare_calendar_change
+  - create_cart_or_order_recommendation_without_checkout
+when_not_to_use:
+  - final_payment
+  - final_booking_confirmation
+  - actual_message_send_without_confirmation
+  - account_settings_change
+input_contract:
+  required:
+    - requested_action
+    - target_service_or_app
+  optional:
+    - constraints
+    - budget
+    - recipient
+    - deadline
+output_contract:
+  required:
+    - observed_options
+    - recommendation
+    - draft_or_next_click_plan
+    - permission_needed_before_execution
+hook_timing:
+  - intent_detected
+  - pre_model
+  - pre_tool
+  - post_tool
+permission_tier:
+  default: T3_external_action_draft
+  auto_allowed:
+    - observation
+    - proposal
+    - draft
+    - preparation
+  requires_confirmation:
+    - add_to_cart
+    - reserve_or_book
+    - send_message
+    - calendar_write
+    - external_post
+  strong_confirmation:
+    - payment
+    - purchase
+    - subscription_change
+  blocked_without_explicit_approval:
+    - account_change
+    - destructive_external_action
+provider_preferences:
+  primary: browser_session
+  reviewers:
+    - permission-review
+  fallback:
+    - codex_cli
+    - openai_api
+  notes: This capability stops before side effects unless permission is explicit.
+storage_policy:
+  drafts: outputs/reports
+  external_action_trace: runtime/traces
+  sensitive_details: do_not_store_unless_user_requests
+tests_or_validation:
+  - permission_boundary_must_be_stated
+  - payment_and_external_send_never_auto
+  - final_action_requires_confirmation_record

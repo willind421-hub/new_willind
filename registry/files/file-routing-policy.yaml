@@ -1,0 +1,315 @@
+contract: willind.file_routing_policy
+version: 0.2.0
+updated: 2026-05-24
+
+principle:
+  registry_role: Registry is the routing center for Willind paths.
+  purpose: Decide where new files, external skill outputs, and generated artifacts should go.
+  default_rule: If intent is unclear, create a review queue item with provenance, candidate destinations, confidence, and TTL.
+  root_rule: Do not create new root folders without adding registry/files/path-tags.yaml coverage.
+  secret_rule: Secrets, browser profiles, model weights, and user private folders are never automatically moved.
+  bundle_rule: Route by decision unit first. Extension-based routing is secondary.
+  manual_review_rule: Manual review is a state with TTL and metadata, not a permanent storage folder.
+
+intents:
+  imported_skill:
+    description: Original external skill/plugin/source that should be preserved as-is.
+    target: capabilities/imported
+    safety: review_before_write
+    notes:
+      - Keep source layout intact.
+      - Wrap through adapters or composed capabilities before live use.
+
+  composed_capability:
+    description: Willind-native capability made by combining skills, policies, prompts, tools, or contracts.
+    target: capabilities/composed
+    safety: review_before_write
+    notes:
+      - Record source ingredients.
+      - Include permission tier and trigger timing.
+
+  mcp_definition:
+    description: MCP server/tool definition, adapter note, permission mapping, or tool contract.
+    target: capabilities/mcp
+    safety: review_before_write
+
+  role_capability:
+    description: Provider-agnostic role responsibility extracted from old department or agent documents.
+    target: capabilities/roles
+    safety: review_before_write
+
+  workflow:
+    description: Repeatable procedure that uses one or more capabilities.
+    target: workflows
+    safety: review_before_write
+
+  reality_item:
+    description: A real-life task, school/company/personal request, money opportunity, or user-facing matter.
+    target: reality
+    safety: explicit_confirmation_required
+    notes:
+      - Link to source conversations or outputs.
+      - Do not duplicate large raw data.
+
+  final_output:
+    description: Finished file meant for the user or outside use.
+    target: outputs
+    safety: safe_write
+
+  runtime_trace:
+    description: Logs, temporary files, generated workspaces, smoke output, screenshots from tests, and tool scratch files.
+    target: runtime/generated-workspaces
+    safety: safe_write
+
+  project_runtime_artifact:
+    description: Generated artifact, report, fixture, restored sample, or viewer/API payload that belongs to one project and may be read by that project's tests, API, or viewer.
+    target: projects/<project>/{artifacts|reports|sample_runs|logs}
+    safety: safe_write
+    notes:
+      - Keep with the owner project when code, tests, or API contracts read the path directly.
+      - Do not classify by file name alone. For example, generation-spec.json is a 3D artifact execution spec, not a planning document.
+      - Promote only reviewed final files to outputs. Runtime evidence and reproducible samples stay with the project.
+
+  cleanup_log:
+    description: Audit trail for file movement and cleanup decisions.
+    target: runtime/cleanup
+    safety: safe_write
+
+  reference:
+    description: External reference, benchmark, UIUX reference, official docs capture, research source, or example.
+    target: references
+    safety: safe_write
+
+  uiux_reference:
+    description: Visual UIUX reference image/video/prototype or motion idea.
+    target: references/uiux
+    safety: safe_write
+
+  raw_data:
+    description: Original export, capture, voice sample, screenshot, transcript, or source evidence.
+    target: data/raw
+    safety: review_before_write
+    notes:
+      - Preserve original bytes when practical.
+      - Processed derivatives go to data/processed.
+
+  processed_data:
+    description: Parsed, redacted, analyzed, integrated, indexed, or normalized data.
+    target: data/processed
+    safety: review_before_write
+    notes:
+      - Record source path and generating script.
+
+  project:
+    description: Independent app, service, library, or long-lived tool.
+    target: projects
+    safety: review_before_write
+    notes:
+      - Project-internal DBs, tests, scripts, and package files stay inside the project unless migrated by contract.
+
+  operation_script:
+    description: Root-level shared operational script that controls Willind services, data, security, or research.
+    target: scripts/operations
+    safety: review_before_write
+
+  research_script:
+    description: Shared research collection or synthesis helper.
+    target: scripts/research
+    safety: review_before_write
+
+  launcher:
+    description: Human-facing shortcut or service launcher.
+    target: launchers/root
+    safety: review_before_write
+
+  archive:
+    description: Deprecated, compatibility, rollback, or preservation-only material.
+    target: archive
+    safety: review_before_write
+
+  backup:
+    description: Backup/recovery material.
+    target: backup
+    safety: do_not_move
+
+  manual_review:
+    description: Unclear file, ambiguous ownership, or external tool output whose final destination is unknown. This is a review state, not a storage category.
+    target: runtime/generated-workspaces/manual-review
+    safety: review_before_write
+    notes:
+      - Create or update a review queue item before moving content here.
+      - Include origin, candidate destinations, confidence, reason, owner, and TTL.
+      - Close the item as accepted, reprocess, archive, or discard.
+
+bundle_policy:
+  decision_unit: same_source_same_work_unit_same_review_conclusion
+  bundle_when:
+    - One source produced multiple derivatives such as pdf, md, html, json, png, or screenshots.
+    - Files must be reviewed together to preserve meaning.
+    - Files share a URL, document id, source hash, run id, timestamp, or explicit manifest.
+    - Delete, archive, reprocess, or promote decisions should happen for the group as one unit.
+    - A research run produced raw evidence, screenshots, source list, synthesis, and decision notes.
+  split_when:
+    - Files are independent even if their extensions match.
+    - Lifecycles differ strongly, such as permanent raw source and regenerable cache.
+    - Owners or reviewers differ.
+    - One file is a final output and another is a runtime trace.
+    - Batch operation by extension is the actual task, such as validating all JSON schemas.
+  bundle_manifest:
+    required_fields:
+      - bundle_id
+      - created_at
+      - origin
+      - source_paths
+      - generated_by
+      - candidate_destinations
+      - confidence
+      - reason
+      - owner
+      - ttl_deadline
+      - decision
+      - decision_reason
+    preferred_file: review.json
+    human_summary: README.md
+  role_subfolders:
+    raw: Original bytes, captures, exports, external responses.
+    derived: Parsed, rendered, converted, or generated derivatives.
+    notes: Human or AI notes about the bundle.
+    sources: URLs, citations, manifests, source metadata.
+    synthesis: Reviewed summaries and decisions.
+  default_review_root: runtime/cleanup/review-items
+
+review_queue_policy:
+  queue_file: runtime/cleanup/review-queue.jsonl
+  item_root: runtime/cleanup/review-items
+  manual_holding_root: runtime/generated-workspaces/manual-review
+  ttl_days:
+    runtime_temp: 1
+    runtime_trace: 7
+    manual_review: 7
+    output_intermediate: 14
+    imported_skill: 14
+    raw_data: 30
+  confidence_bands:
+    auto_route:
+      min: 0.90
+      meaning: Destination is structurally clear.
+    short_review:
+      min: 0.70
+      max: 0.89
+      meaning: Likely destination, but owner or lifecycle should be checked.
+    manual_review:
+      min: 0.40
+      max: 0.69
+      meaning: Queue with candidates and TTL.
+    hold_or_discard_candidate:
+      min: 0.20
+      max: 0.39
+      meaning: Keep briefly only if source or owner is meaningful.
+    discard_candidate:
+      max: 0.19
+      meaning: Empty, duplicate, cache, broken, or source-less material.
+  close_states:
+    - accepted
+    - reprocess
+    - archive
+    - discard
+  question_rule:
+    max_choices: 3
+    include_discard_choice: true
+    ask_about_role_not_extension: true
+
+blocked_intents:
+  secret:
+    target: .secrets
+    safety: do_not_read_content
+    reason: Secret material must not be moved, printed, or inspected automatically.
+  env:
+    target: .env
+    safety: do_not_read_content
+    reason: Root env stays at root by user rule.
+  browser_profile:
+    target: .browser-profiles
+    safety: do_not_read_content
+    reason: Browser profiles contain login/session state.
+  model_weight:
+    target: models
+    safety: do_not_move
+    reason: Heavy AI assets are excluded from cleanup and backup movement.
+  active_service_root:
+    target: projects_or_active_root
+    safety: do_not_move
+    reason: Active service roots need a service registry migration before relocation.
+
+name_patterns:
+  - pattern: "(?i)(secret|credential|client_secret|token|apikey|api_key|private|\\.pem$|\\.p12$|\\.pfx$|\\.key$|\\.npmrc$|gcal_token|tokens\\.json)"
+    intent: secret
+  - pattern: "(?i)\\.(gguf|safetensors|bin|pt|pth|onnx|ckpt|model)$"
+    intent: model_weight
+  - pattern: "(?i)(ui|ux|hud|stitch|design|mockup|prototype)"
+    intent: uiux_reference
+  - pattern: "(?i)(reference|benchmark|research|case-study|official-doc|paper)"
+    intent: reference
+  - pattern: "(?i)(workflow|procedure|runbook)"
+    intent: workflow
+  - pattern: "(?i)(skill|plugin|superpowers|gstack|harness)"
+    intent: imported_skill
+  - pattern: "(?i)(smoke|tmp|temp|cache|pytest|trace|log)"
+    intent: runtime_trace
+  - pattern: "(?i)(backup|restore)"
+    intent: backup
+  - pattern: "(?i)(screenshot|capture|recording|transcript)"
+    intent: raw_data
+  - pattern: "(?i)\\.(mp4|mov|mkv|avi|wav|mp3|flac|webm)$"
+    intent: raw_data
+  - pattern: "(?i)\\.(png|jpg|jpeg|webp|gif)$"
+    intent: raw_data
+
+ingress_lanes:
+  external_skill_trial:
+    target: runtime/generated-workspaces/external-skill-trials
+    promotion_targets:
+      - capabilities/imported
+      - capabilities/composed
+      - references
+      - archive
+    rule: Run external tools here first; promote only reviewed pieces.
+
+  ai_generated_artifact:
+    target: runtime/generated-workspaces/ai-generated
+    promotion_targets:
+      - outputs
+      - references
+      - projects
+    rule: Generated files start as runtime material, not final output.
+
+  user_manual_drop:
+    target: runtime/generated-workspaces/manual-review
+    promotion_targets:
+      - reality
+      - outputs
+      - references
+      - data/raw
+    rule: Manual drops are reviewed before being assigned to reality, data, or output.
+
+  browser_capture:
+    target: data/raw/capture
+    promotion_targets:
+      - references/uiux
+      - references/research
+      - outputs
+    rule: Browser screenshots/videos are raw evidence first.
+
+required_provenance_for_promotion:
+  - source_path
+  - source_intent
+  - destination_path
+  - reason
+  - moved_at
+  - actor
+  - reversible
+
+verification:
+  path_tags: scripts/operations/files/verify-path-tags.ps1
+  routing_policy: scripts/operations/files/suggest-file-route.py --self-test
+  bundle_policy: scripts/operations/files/suggest-bundle-route.py --self-test

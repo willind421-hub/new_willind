@@ -1,0 +1,40 @@
+id: skill-authoring-workflow
+version: 0.1.0
+status: active_contract
+purpose: >
+  스킬·플러그인을 만들고 운영하는 작업 틀 — 플러그인 template/구조/테스트(vitest),
+  git-workflow, skill-finder(필요 스킬 탐색), output-styles. willind가 새 스킬을
+  SKILL.md 표준으로 찍어낼 때 쓰는 제작 도구.
+relation:
+  complements: [skill-hub-adapter, external-skill-absorption]
+  overlaps_with_willind: skill-source-inventory·_prompt-to-skill-pipeline(이미 보유) — 빈칸=플러그인 template·git-workflow·skill-finder
+when_to_use: [skill_authoring, plugin_scaffold, git_workflow, finding_right_skill]
+when_not_to_use: [non_dev_task]
+method:
+  - scaffold_from_template   # 플러그인 구조·테스트 틀
+  - skill_finder             # 작업에 맞는 스킬 탐색
+  - git_workflow_discipline
+input_contract:
+  required: [skill_intent]
+  optional: [template_choice, existing_skills]
+output_contract:
+  required: [scaffold_or_skill_draft, next_step]
+  optional: [skill_finder_result]
+hook_timing: [intent_detected, pre_model, pre_tool, post_tool]
+storage_policy: runtime_trace
+tests_or_validation: scripts/operations/skills/verify-skill-kernel.py
+runtime:
+  status: already_in_willind   # 중복 — 베끼지 않고 연결(사용자 정책 2026-06-22)
+  existing_implementation:
+    - registry/skills/skill-source-inventory.yaml (스킬 흡수 인벤토리)
+    - runtime/skills/candidates/_prompt-to-skill-pipeline.md (스킬 제작 단계)
+  note: 플러그인 template·skill-finder = willind 스킬 파이프라인으로 충분. 이식 안 함.
+permission_tier:
+  default: T2_dev
+  auto_allowed: [observation, scaffold_draft]
+  requires_confirmation: [repo_write]
+provider_preferences:
+  implementers: [codex_cli]
+notes:
+  - SKILL.md 표준화(살베지 #3)·gstack 흡수(#7)와 합류. willind native 절차로만.
+

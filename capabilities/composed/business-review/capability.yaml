@@ -1,0 +1,72 @@
+id: business-review
+version: 0.1.0
+status: active_contract
+purpose: >
+  Turn money, market, pricing, customer, product, or opportunity questions into
+  evidence-backed options without executing paid or external actions.
+when_to_use:
+  - money_opportunity_scan
+  - pricing_or_packaging_decision
+  - customer_or_market_validation
+  - small_experiment_design
+  - sales_or_landing_copy_draft
+when_not_to_use:
+  - actual_purchase
+  - payment
+  - external_message_send
+  - account_change
+  - private_financial_data_export
+input_contract:
+  required:
+    - opportunity_or_question
+  optional:
+    - budget
+    - target_customer
+    - existing_assets
+    - risk_constraints
+output_contract:
+  required:
+    - evidence
+    - options
+    - recommendation
+    - next_small_experiment
+    - permission_boundary
+hook_timing:
+  - intent_detected
+  - pre_model
+  - post_model
+  - scheduled
+permission_tier:
+  default: T3_guarded_business
+  auto_allowed:
+    - observation
+    - proposal
+    - draft
+    - measurement_plan
+  requires_confirmation:
+    - external_send
+    - public_post
+    - paid_ad
+    - purchase
+  blocked_without_explicit_approval:
+    - payment
+    - account_change
+provider_preferences:
+  primary: browser_session
+  reviewers:
+    - claude_cli
+    - openai_api
+  implementers:
+    - codex_cli
+  fallback:
+    - local_llm
+  notes: Research and reasoning first; implementation only after permission boundary is clear.
+storage_policy:
+  raw_sources: references/research/business
+  drafts: outputs/reports
+  traces: runtime/traces
+  reality_links: reality
+tests_or_validation:
+  - cite_source_list_for_external_claims
+  - distinguish_observation_proposal_draft_execution
+  - never_mark_payment_or_external_send_as_auto

@@ -1,0 +1,21 @@
+id: provider-endpoint-probe
+title: Provider 엔드포인트 probe
+version: 0.1.0
+purpose: >
+  Check provider endpoint health, chat capability, latency, cooldown, and
+  friendly error reasons before routing paid or local model work.
+runtime_role: provider_health_contract
+permission_tier:
+  default: T2_trace_required
+inputs:
+  - registry/providers/provider-cli-routing.yaml
+  - registry/providers/provider-bootstrap.yaml
+outputs:
+  - endpoint_health
+  - chat_probe_result
+  - latency_score
+  - cooldown_state
+do_not:
+  - start_local_model_serving
+  - read_api_keys
+status: contract_registered

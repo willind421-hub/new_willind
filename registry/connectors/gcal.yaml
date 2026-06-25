@@ -1,0 +1,52 @@
+contract: willind.connector.gcal
+version: 0.1.0
+updated: 2026-06-14
+
+connector:
+  id: gcal
+  display_name: Google Calendar
+  kind: calendar_connector
+  priority: P1
+  status: planned_disabled
+  owner_scope: calendar_workspace
+
+read:
+  status: active_available
+  permission_required: allow
+  notes: >
+    Live read-only via limb_consumer (2026-06-20). get_events/get_holidays/get_calendars.
+    Results wrapped untrusted + secret-redacted. Verified live (get_holidays 2026 = 29 rows).
+draft:
+  status: planned_disabled
+  permission_required: allow
+  notes: Calendar event bodies can be prepared locally.
+write:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Create and update calendar events pass preflight.
+send:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Calendar writes are account-visible external state changes.
+delete:
+  status: planned_disabled
+  permission_required: confirm_or_block
+  notes: Calendar event deletion passes preflight and delete policy.
+payment:
+  status: blocked
+  permission_required: blocked
+  notes: Calendar connector must not change Google billing or account plans.
+
+secret_env_names:
+  - GOOGLE_CREDENTIALS_PATH
+  - GOOGLE_OAUTH_CLIENT_FILE
+  - GOOGLE_OAUTH_LOCAL_PORT
+  - WILLIND_CALENDAR_ID
+
+permission_required:
+  read: allow
+  draft: allow
+  write: confirm
+  send: confirm
+  delete: confirm_or_block
+  payment: blocked

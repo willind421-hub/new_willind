@@ -1,0 +1,53 @@
+contract: willind.connector.sns_publishing
+version: 0.1.0
+updated: 2026-06-14
+
+connector:
+  id: sns-publishing
+  display_name: SNS Publishing
+  kind: social_publish_connector
+  priority: P3
+  status: planned_disabled
+  owner_scope: public_publishing
+
+read:
+  status: planned_disabled
+  permission_required: allow
+  notes: Public post or account page inspection may be added later.
+draft:
+  status: planned_disabled
+  permission_required: allow
+  notes: Captions, post text, hashtags, and upload plans are local-only.
+write:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Remote drafts, profile edits, or media staging are gated.
+send:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Publishing, commenting, DM, follow, or repost requires preflight.
+delete:
+  status: planned_disabled
+  permission_required: confirm_or_block
+  notes: Deleting social posts or comments is gated.
+payment:
+  status: blocked
+  permission_required: blocked
+  notes: Paid boosts and ads belong to advertising connector.
+
+secret_env_names:
+  - SNS_ACCESS_TOKEN
+  - X_API_KEY
+  - X_API_SECRET
+  - THREADS_ACCESS_TOKEN
+  - INSTAGRAM_ACCESS_TOKEN
+  - REDDIT_CLIENT_ID
+  - REDDIT_CLIENT_SECRET
+
+permission_required:
+  read: allow
+  draft: allow
+  write: confirm
+  send: confirm
+  delete: confirm_or_block
+  payment: blocked

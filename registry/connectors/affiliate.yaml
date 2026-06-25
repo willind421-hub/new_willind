@@ -1,0 +1,47 @@
+contract: willind.connector.affiliate
+version: 0.1.0
+updated: 2026-06-14
+
+connector:
+  id: affiliate
+  display_name: Affiliate / Commerce Links
+  kind: affiliate_connector
+  priority: P3
+  status: planned_disabled
+  owner_scope: revenue_links
+
+read:
+  status: planned_disabled
+  permission_required: allow
+  notes: Product inputs and local post drafts may be inspected.
+draft:
+  status: planned_disabled
+  permission_required: allow
+  notes: Affiliate article and disclosure text drafts are allowed.
+write:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Creating money-bearing deeplinks calls an external affiliate API.
+send:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Publishing affiliate content requires preflight and disclosure checks.
+delete:
+  status: planned_disabled
+  permission_required: confirm_or_block
+  notes: Removing published affiliate content is gated.
+payment:
+  status: blocked
+  permission_required: blocked
+  notes: Self-purchase, self-click, payout changes, and billing actions are blocked.
+
+secret_env_names:
+  - AFFILIATE_API_KEY
+
+permission_required:
+  read: allow
+  draft: allow
+  write: confirm
+  send: confirm
+  delete: confirm_or_block
+  payment: blocked

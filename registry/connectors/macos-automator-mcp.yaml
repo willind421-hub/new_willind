@@ -1,0 +1,44 @@
+contract: willind.connector.macos_automator_mcp
+version: 0.1.0
+updated: 2026-05-28
+
+connector:
+  id: macos-automator-mcp
+  display_name: macOS Automator MCP
+  kind: mcp_device_control
+  status: disabled_on_windows
+  owner_scope: input_wake_telegram
+
+runtime:
+  host_os_required: macOS
+  current_windows_contract: disabled
+  mcp_server: steipete/macos-automator-mcp compatible contract
+  transport: stdio_or_http_mcp
+
+capabilities:
+  planned:
+    - app_focus
+    - window_arrange
+    - shortcut_or_applescript_run
+    - screen_state_read
+  disabled_until:
+    - macOS host is available
+    - Accessibility permission is granted on the Mac
+    - explicit Permission Gate approval is present for side effects
+
+degraded_behavior:
+  health_status: degraded
+  execution: blocked
+  read_only_contract_visible: true
+  message: Mac automation is not executed from Windows. Only contract and routing decisions are exposed.
+
+safety:
+  direct_mac_control_from_windows: false
+  external_send: blocked
+  account_change: blocked
+  payment: blocked
+  permission_gate_required_for_side_effects: true
+  no_credentials_in_registry: true
+
+verification:
+  smoke: python scripts/operations/input/verify-input-contracts.py

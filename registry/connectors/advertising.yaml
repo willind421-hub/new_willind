@@ -1,0 +1,51 @@
+contract: willind.connector.advertising
+version: 0.1.0
+updated: 2026-06-14
+
+connector:
+  id: advertising
+  display_name: Advertising
+  kind: paid_campaign_connector
+  priority: P3
+  status: disabled_strong_confirm_only
+  owner_scope: paid_growth
+
+read:
+  status: planned_disabled
+  permission_required: allow
+  notes: Campaign performance, public ad library, and pricing research may be added.
+draft:
+  status: planned_disabled
+  permission_required: allow
+  notes: Copy, audience, budget, and experiment plans are draft-only.
+write:
+  status: planned_disabled
+  permission_required: strong_confirm
+  notes: Creating campaigns or changing budgets affects money and accounts.
+send:
+  status: planned_disabled
+  permission_required: strong_confirm
+  notes: Submitting or publishing ads requires strong confirmation.
+delete:
+  status: planned_disabled
+  permission_required: confirm_or_block
+  notes: Pausing or deleting campaigns changes account state.
+payment:
+  status: disabled_strong_confirm_only
+  permission_required: strong_confirm
+  notes: Any ad spend, billing setup, or budget increase is payment.
+
+secret_env_names:
+  - GOOGLE_ADS_DEVELOPER_TOKEN
+  - GOOGLE_ADS_CLIENT_ID
+  - GOOGLE_ADS_CLIENT_SECRET
+  - META_ADS_ACCESS_TOKEN
+  - TIKTOK_ADS_ACCESS_TOKEN
+
+permission_required:
+  read: allow
+  draft: allow
+  write: strong_confirm
+  send: strong_confirm
+  delete: confirm_or_block
+  payment: strong_confirm

@@ -1,0 +1,143 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+.secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.tokens.json
+*token*.json
+*secret*.json
+*credential*.json
+client_secret*.json
+*.session
+.npmrc
+.mcp.json
+
+# Runtime state and local data
+akashic_raw/sources/*/raw/
+akashic_raw/_logs/
+akashic_raw/manifest.jsonl
+akashic_raw/sources/*/source.json
+*.db
+*.db.bak*
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+uploads/
+**/uploads/
+logs/
+**/logs/
+*.log
+**/*_state.json
+**/.terminal_session_id
+**/speaker_profile*.json
+**/telegram_media/
+**/memory_db/
+**/generated_images/
+.browser-profiles/
+.claude/
+.obsidian/
+browser-profiles/
+**/browser-profiles/
+chrome-user-data/
+**/chrome-user-data/
+user-data-dir/
+**/user-data-dir/
+
+# Dependencies, caches, and build output
+node_modules/
+**/node_modules/
+.venv/
+**/.venv/
+**/.venv-*/
+**/*_venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.vite/
+dist/
+build/
+coverage/
+
+# Large local assets
+models/
+**/*.gguf
+**/*.safetensors
+**/*.pt
+**/*.pth
+**/*.onnx
+**/*.zip
+
+# Willind local-only workspaces, runtime state, and personal context
+runtime/
+backup/
+worktrees/
+workspaces/
+handoff/
+artifacts/
+outputs/
+reality/
+개인/
+사진/
+학교/
+회사/
+# 작업 일지(사용자-운영자 운영 기록·의사결정 맥락) — 로컬 보존, 공개 제외
+docs/chat-log/
+docs/history/
+docs/growth/
+
+# --- willind-os(뇌) 백업 스코프 (2026-06-20) ---
+# 손발 프로젝트·데이터·레퍼런스는 별도 백업(각자 자기 git 다수) → 뇌 repo에선 제외
+projects/
+data/
+references/
+archive/
+akashic_raw/
+# 브라우저 프로필(쿠키·세션 = 민감) 반드시 제외
+.chrome-fetch-profile/
+.browser-profiles/
+# 루트 정션/심볼릭(프로젝트로 연결) 제외 — git이 정션을 따라가 프로젝트를 빨아들임
+/jarvis/
+/artifacts/
+/handoff/
+/workspaces/
+# willind-mcp: 코드는 공개, 데이터(*.db)·node_modules·logs는 위 규칙으로 제외됨
+# .env 시크릿은 제외하되, 예시(.env.example)는 공개 — 막는 규칙 뒤에 예외 명시
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+config/willind/mappings/generated-workspaces/
+# 외부 스킬 원본(재다운로드 가능) — willind 조합/정의만 백업
+capabilities/imported/
+# 미디어·문서 바이너리·대용량 — 뇌 백업은 텍스트(척추·규칙·문서) 중심
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.webp
+**/*.bmp
+**/*.ico
+**/*.svg
+**/*.mp4
+**/*.mov
+**/*.webm
+**/*.mp3
+**/*.wav
+**/*.pdf
+**/*.docx
+**/*.pptx
+**/*.xlsx
+**/*.bak
+**/*.bak.*
+
+# 운영·개발 기록 (사용자 환경 특정 경로/도메인 포함) — 비공개
+docs/troubleshooting.md
+willind-mcp/docs/

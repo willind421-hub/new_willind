@@ -1,0 +1,49 @@
+contract: willind.connector.gdrive
+version: 0.1.0
+updated: 2026-06-14
+
+connector:
+  id: gdrive
+  display_name: Google Drive
+  kind: file_storage_connector
+  priority: P1
+  status: planned_disabled
+  owner_scope: workspace_storage
+
+read:
+  status: planned_disabled
+  permission_required: allow
+  notes: List, search, file metadata, and download helpers exist.
+draft:
+  status: planned_disabled
+  permission_required: allow
+  notes: Upload and folder-create candidates can be prepared.
+write:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Upload and folder creation use external-send preflight.
+send:
+  status: planned_disabled
+  permission_required: confirm
+  notes: Uploading local content to Drive is an external send.
+delete:
+  status: planned_disabled
+  permission_required: confirm_or_block
+  notes: Delete is not part of the current bridge contract.
+payment:
+  status: blocked
+  permission_required: blocked
+  notes: Drive connector must not change billing or storage plans.
+
+secret_env_names:
+  - GOOGLE_CREDENTIALS_PATH
+  - GOOGLE_OAUTH_CLIENT_FILE
+  - GOOGLE_OAUTH_LOCAL_PORT
+
+permission_required:
+  read: allow
+  draft: allow
+  write: confirm
+  send: confirm
+  delete: confirm_or_block
+  payment: blocked

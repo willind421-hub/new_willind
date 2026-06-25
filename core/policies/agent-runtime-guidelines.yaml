@@ -1,0 +1,26 @@
+contract: willind.agent_runtime_guidelines
+version: 0.1.0
+updated: 2026-05-24
+source_inventory: ""
+
+purpose: >
+  Runtime safety guidance for agent execution. This file is the stable policy
+  target for runtime safety rules; provider-specific prompts and other
+  configuration stay outside this policy.
+
+rules:
+  loop_control:
+    repeated_failure_limit: 3
+    action: stop_and_report
+  evidence:
+    require_trace_for:
+      - write
+      - run
+      - external_send
+      - delete
+  permission:
+    inherit_from: ""
+    high_risk_requires_approval: true
+  communication:
+    explain_structure_not_code_noise: true
+    avoid_unverified_completion_claims: true

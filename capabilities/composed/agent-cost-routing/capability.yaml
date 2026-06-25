@@ -1,0 +1,42 @@
+id: agent-cost-routing
+version: 0.1.0
+status: active_contract
+purpose: >
+  멀티에이전트 작업을 비용 효율적으로 라우팅한다 — token-frugal 모델등급 라우팅,
+  subagent 위임으로 비싼 모델 호출 절감, Opus↔Sonnet 등급 전환으로 비용 최적화.
+  "쉬운 건 싼 모델, 어려운 것만 비싼 모델"을 자동으로.
+relation:
+  complements: [provider-endpoint-probe, agent-gateway-runtime]
+  overlaps_with_willind: 분열(spawn_division)·provider 라우팅·usage-tracker(이미 보유) — 빈칸=비용기반 등급전환·token-frugal 라우팅·비용역전 방지
+when_to_use: [multi_agent_task, model_tier_selection, cost_optimization, subagent_delegation]
+when_not_to_use: [single_simple_query]
+method:
+  - tier_route_by_difficulty   # 쉬운 건 싼 모델, 어려운 것만 격상
+  - subagent_delegate          # 위임으로 비싼 호출 절감
+  - cost_inversion_guard       # 약한모델+무거운하네스 > 강한모델 역전선 감시
+input_contract:
+  required: [task, model_options]
+  optional: [budget, difficulty_estimate]
+output_contract:
+  required: [route_decision, cost_estimate]
+  optional: [escalation_plan]
+hook_timing: [intent_detected, pre_model, pre_tool, post_tool]
+storage_policy: runtime_trace
+tests_or_validation: scripts/operations/skills/verify-skill-kernel.py
+runtime:
+  status: already_in_willind   # 중복 — 베끼지 않고 연결(사용자 정책 2026-06-22)
+  existing_implementation:
+    - services/model_gateway.py (provider 라우팅·disabled 토글·_failed_until 실패쿨다운·allow_paid)
+    - services/cost_ceiling.py (비용 상한)
+    - agent_loop ask_models (route/council 위임)
+  note: 외부 비용라우팅 스킬 = willind B라우팅(세션2 구현)으로 이미 됨. 이식 안 함.
+permission_tier:
+  default: T2_routing
+  auto_allowed: [observation, route_proposal, cost_estimate]
+  requires_confirmation: [paid_model_escalation]
+provider_preferences:
+  primary: provider_routing_resolver
+notes:
+  - 모델 등급별 차등(약함=강제·셈=위임)의 라우팅 엔진. 골든셋 측정값으로 등급 배치. [[skill-merge-design]]
+  - swd-file-verification의 Cost-Router(검증실패시 격상)와 짝.
+

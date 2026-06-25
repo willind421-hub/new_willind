@@ -1,0 +1,175 @@
+contract: willind.connector_registry
+version: 0.1.0
+updated: 2026-06-14
+
+purpose: >
+  Register external connector slots before runtime implementation. These
+  records classify what a connector may eventually read, draft, write, send,
+  delete, or pay for. A registry entry is not executable permission.
+
+principles:
+  contract_first_runtime_later: true
+  registry_entry_is_not_live_connector: true
+  strictest_policy_wins: true
+  no_secret_values_in_registry: true
+  no_oauth_creation_from_registry_change: true
+  no_external_send_from_registry_change: true
+  no_billing_or_paid_plan_from_registry_change: true
+
+common_schema:
+  top_level_allowed_fields:
+    - contract
+    - version
+    - updated
+    - connector
+    - read
+    - draft
+    - write
+    - send
+    - delete
+    - payment
+    - secret_env_names
+    - permission_required
+  required_fields:
+    - read
+    - draft
+    - write
+    - send
+    - delete
+    - payment
+    - secret_env_names
+    - permission_required
+  status_values:
+    - active_available
+    - partial_available
+    - planned_disabled
+    - disabled_strong_confirm_only
+    - blocked
+  status_policy: >
+    P1-P3 connector slots default to planned_disabled or
+    disabled_strong_confirm_only. Runtime references may point to existing
+    code, but this registry does not make that code executable.
+  permission_values:
+    - allow
+    - trace_required
+    - confirm
+    - confirm_or_block
+    - strong_confirm
+    - strong_confirm_or_block
+    - blocked
+
+p0_controls:
+  - id: common-envelope
+    path: registry/connectors/common-envelope.yaml
+    status: active_available
+  - id: secret-broker
+    path: registry/connectors/secret-broker.yaml
+    status: planned_disabled
+  - id: preflight-enforcement
+    path: registry/connectors/preflight-enforcement.yaml
+    status: active_available
+
+priorities:
+  P1:
+    meaning: core connector slots Willind is likely to use often
+    connectors:
+      - telegram
+      - gdrive
+      - gcal
+      - github
+      - browser-research
+  P2:
+    meaning: useful general connectors, not required for every workflow
+    connectors:
+      - gmail
+      - slack
+      - discord
+      - ssh-tailscale
+      - webhook
+  P3:
+    meaning: publishing, money, commerce, affiliate, or advertising connectors
+    connectors:
+      - youtube
+      - sns-publishing
+      - payment-commerce
+      - affiliate
+      - advertising
+
+connectors:
+  - id: telegram
+    path: registry/connectors/telegram.yaml
+    priority: P1
+    status: planned_disabled
+  - id: gdrive
+    path: registry/connectors/gdrive.yaml
+    priority: P1
+    status: planned_disabled
+  - id: gcal
+    path: registry/connectors/gcal.yaml
+    priority: P1
+    status: planned_disabled
+  - id: github
+    path: registry/connectors/github.yaml
+    priority: P1
+    status: planned_disabled
+  - id: browser-research
+    path: registry/connectors/browser-research.yaml
+    priority: P1
+    status: planned_disabled
+  - id: gmail
+    path: registry/connectors/gmail.yaml
+    priority: P2
+    status: planned_disabled
+  - id: slack
+    path: registry/connectors/slack.yaml
+    priority: P2
+    status: planned_disabled
+  - id: discord
+    path: registry/connectors/discord.yaml
+    priority: P2
+    status: planned_disabled
+  - id: ssh-tailscale
+    path: registry/connectors/ssh-tailscale.yaml
+    priority: P2
+    status: planned_disabled
+  - id: webhook
+    path: registry/connectors/webhook.yaml
+    priority: P2
+    status: planned_disabled
+  - id: youtube
+    path: registry/connectors/youtube.yaml
+    priority: P3
+    status: planned_disabled
+  - id: sns-publishing
+    path: registry/connectors/sns-publishing.yaml
+    priority: P3
+    status: planned_disabled
+  - id: payment-commerce
+    path: registry/connectors/payment-commerce.yaml
+    priority: P3
+    status: disabled_strong_confirm_only
+  - id: affiliate
+    path: registry/connectors/affiliate.yaml
+    priority: P3
+    status: planned_disabled
+  - id: advertising
+    path: registry/connectors/advertising.yaml
+    priority: P3
+    status: disabled_strong_confirm_only
+
+runtime_boundaries:
+  preflight_policy: registry/connectors/preflight-enforcement.yaml
+  external_send_service: registry/services/external-send-preflight.yaml
+  permission_policy: registry/permissions/permission-gate-policy.yaml
+  untrusted_context_policy: registry/services/untrusted-context.yaml
+  secret_policy: registry/connectors/secret-broker.yaml
+
+rules:
+  connector_status_does_not_authorize_execution: true
+  missing_runtime_is_planned_or_disabled_not_deleted: true
+  write_send_delete_payment_need_permission_mapping: true
+  secret_env_names_are_key_names_only: true
+  secret_values_must_not_be_read_or_logged: true
+  retrieved_connector_content_is_untrusted: true
+  live_runtime_enablement_requires_tests: true
+  p1_p2_p3_connector_files_use_common_fields_only: true

@@ -1,0 +1,113 @@
+contract: willind.external_send_preflight_service
+version: 0.1.2
+updated: 2026-06-03
+
+purpose: >
+  Provide the common final local inspection point before generated text,
+  reports, attachments, pull requests, webhooks, uploads, emails, or external
+  review artifacts leave Willind.
+
+api:
+  dashboard_backend:
+    - /api/permission/external-send-preflight
+  action_runtime:
+    - POST /api/action-runtime/actions/preflight_external_send_candidate
+
+owner:
+  project: "<your-backend>"
+  service: ""
+  router: ""
+  audit_dir: ""
+  # Register each local project/service that must route an external send
+  # through this preflight. One entry per outbound boundary.
+  local_project_connectors:
+    - project: "<your-project>"
+      service: ""
+      runner: ""
+      scope: ""
+      boundary: ""
+
+decision:
+  create_new_sender: false
+  canonical_direction: inspect_before_any_external_send
+  reason: >
+    External send is a boundary action. The preflight endpoint must inspect
+    candidate text and attachment metadata, produce a redacted audit record,
+    and return the Permission Gate state. It must not perform the actual send.
+
+input_contract:
+  payload_fields:
+    - channel
+    - target_kind
+    - destination
+    - subject
+    - content
+    - attachments
+    - caller
+    - dry_run_only
+    - visibility
+    - content_origin
+    - metadata
+  attachment_boundary: metadata_only
+  attachment_file_content_read: false
+  secret_value_read: false
+
+decision_map:
+  allow:
+    meaning: preview_or_dry_run_only
+    runtime_status: queued
+  trace_required:
+    meaning: public_generated_low_risk_candidate_can_continue_with_trace
+    runtime_status: queued
+  confirm:
+    meaning: unknown_or_private_or_real_send_needs_approval
+    runtime_status: needs_approval
+  blocked:
+    meaning: secret_or_credential_candidate_must_not_leave
+    runtime_status: blocked
+
+permission:
+  lifecycle: external_send
+  default_decision: confirm
+  public_generated_low_risk: trace_required
+  unknown_sensitivity: confirm
+  private_or_internal: confirm
+  secret_or_credential: blocked
+  policy_source: registry/permissions/permission-gate-policy.yaml
+
+runtime_bridge:
+  action_type: preflight_external_send_candidate
+  action_category: permission_policy
+  executor: external_send_preflight_only
+  outbound_execution: false
+  expected_callers:
+    - email_sender
+    - upload_adapter
+    - webhook_adapter
+    - git_push_or_pr_adapter
+    - external_review_exporter
+  must_record:
+    - audit_id
+    - decision
+    - sensitivity
+    - redacted_preview
+    - permission_gate.runtime_status
+  must_not:
+    - send_email
+    - publish_post
+    - call_webhook
+    - push_git
+    - upload_file
+    - read_attachment_content
+    - print_secret_value
+
+# List the tests that exercise this preflight contract in your project.
+tests: []
+
+# Optional: record a sweep of code paths audited for unguarded external sends.
+# coverage_audit_<date>:
+#   swept_paths:
+#     - "<path/to/outbound/code>"
+#   findings:
+#     - path: "<path/to/outbound/code>"
+#       result: "<what the audit found>"

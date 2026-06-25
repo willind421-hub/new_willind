@@ -1,0 +1,66 @@
+contract: willind.memory_productization_service
+version: 0.1.2
+updated: 2026-06-04
+
+service:
+  id: memory-productization
+  display_name: Willind Memory Productization
+  kind: local_memory_management_api
+  status: active_available
+  project: ""
+
+purpose: >
+  Expose memory as a managed product surface instead of a hidden vector store.
+  Memory can be stored, searched, listed, pinned, archived, audited, exported,
+  imported, and grouped by session while remaining untrusted model context.
+
+boundaries:
+  local_only: true
+  reads_secret_files: false
+  reads_env_values: false
+  external_send: false
+  payment: false
+  account_change: false
+  recalled_memory_is_instruction: false
+  delete_requires_explicit_delete_endpoint: true
+  dependency_missing_is_degraded_not_unknown: true
+  sqlite_metadata_fallback_when_chromadb_missing: true
+
+entrypoints:
+  dashboard_backend_service: "<your-backend>"
+  api_router: "<your-backend>"
+  api_paths:
+    - /api/memory/store
+    - /api/memory/search
+    - /api/memory/items
+    - /api/memory/audit
+    - /api/memory/export
+    - /api/memory/import
+    - /api/memory/session/{session_id}
+    - /api/memory/{memory_id}/pin
+    - /api/memory/{memory_id}/archive
+    - /api/memory/{memory_id}
+
+storage:
+  vector_store: "<your-backend>"
+  mirrored_memory_core: ""
+  session_key: session_id
+
+management_model:
+  pin: keep visible as important memory
+  archive: hide from default lists without deleting
+  audit: find duplicates and command-like memory candidates
+  export: produce local management payload
+  import: add local memory records from reviewed payloads
+  session: show memories tied to one work/conversation session
+
+tests: []
+
+notes:
+  - Memory recall is data, not a trusted instruction source.
+  - Full Dashboard/Electron memory UI is a separate surface step.
+  - If the vector store dependency is unavailable, the operations surface must
+    still return a degraded read-only row instead of disappearing as unknown.
+  - If `chroma.sqlite3` exists while the ChromaDB Python dependency is missing,
+    the operations surface may expose counts and non-content metadata only.
+    It must not read stored memory bodies, vectors, or private raw exports.

@@ -1,0 +1,96 @@
+contract: willind.telegram_gateway_service
+version: 0.2.5
+updated: 2026-06-03
+
+service:
+  id: telegram-gateway
+  display_name: Willind Telegram Gateway
+  project: ""
+  kind: external_text_input_gateway
+  status: planned_available
+
+entrypoints:
+  cli: ""
+  api: ""
+  smoke: ""
+
+api:
+  default_host: 127.0.0.1
+  default_port: 18025
+  health: /health
+  events: /events
+  poll_once: /poll-once
+  poll_room_updates_once: /poll-room-updates-once
+  poll_research_updates_once: /poll-research-updates-once
+
+storage:
+  runtime_db: ""
+  data_domains:
+    - telegram_events
+    - gateway_decisions
+    - telegram_room_links
+    - telegram_room_status_reports
+    - telegram_research_links
+    - telegram_research_status_reports
+    - offset_state
+
+guards:
+  direct_external_execution: false
+  user_allowlist_safe_autorun: true
+  allowed_chat_ids_required: true
+  token_source: TELEGRAM_BOT_TOKEN
+  chat_allowlist_source: TELEGRAM_ALLOWED_CHAT_IDS
+  legacy_chat_id_source: TELEGRAM_CHAT_ID
+  dangerous_actions_go_to_permission_gate: true
+  payment_delete_external_send_account_change_stay_gated: true
+  secret_or_credential_send_blocked: true
+  focus_transfer_to_cli: false
+  gateway_remains_operator: true
+  visible_debate_terminal_allowed_for_safe_work: true
+  blocked_without_allowlist: true
+  never_log:
+    - TELEGRAM_BOT_TOKEN
+    - token
+    - credential
+    - password
+
+flow:
+  input: Telegram Bot API getUpdates
+  classify: <your-backend> /api/willind-ai/compose
+  routing_classes:
+    - conversation
+    - execution_command
+    - approval_required
+    - blocked
+    - unauthorized
+    - error
+  candidate_record: <your-backend> /api/action-runtime/skill-kernel-candidates
+  run_safe_candidate: <your-backend> /api/action-runtime/skill-kernel-candidates/{job_id}/run-safe
+  visible_debate_room_create: <your-backend> /api/cli-debate/rooms
+  visible_debate_room_launch: <your-backend> /api/cli-debate/rooms/{room_id}/launch
+  visible_debate_room_followup: <your-backend> /api/cli-debate/rooms/{room_id}/user-message
+  visible_debate_room_status: <your-backend> /api/cli-debate/rooms/{room_id}
+  visible_debate_room_status_refresh: <your-backend> room read refreshes headless orchestrator state and known process liveness
+  deep_research_job_create: <your-backend> /api/deep-research/jobs
+  deep_research_job_start: <your-backend> /api/deep-research/jobs/{job_id}/start
+  deep_research_job_status: <your-backend> /api/deep-research/jobs/{job_id}
+  room_link_storage: telegram_room_links
+  room_status_report_storage: telegram_room_status_reports
+  research_link_storage: telegram_research_links
+  research_status_report_storage: telegram_research_status_reports
+  reply: Telegram Bot API sendMessage
+  execution_boundary: Action Runtime, CLI Debate Room, and Permission Gate only
+  completion_reply: Telegram Bot API sendMessage after Action Runtime returns done/running/blocked/failed
+  debate_reply: Telegram Bot API sendMessage after visible CLI Debate Room is launched or receives follow-up
+  debate_completion_reply: Telegram Bot API sendMessage once when a linked room reaches done, blocked, failed, paused, or needs_approval
+  deep_research_reply: Telegram Bot API sendMessage after a safe research job is created and started
+  deep_research_completion_reply: Telegram Bot API sendMessage once when a linked research job reaches running, done, blocked, or cancelled
+  generic_job_runner_exposed_to_telegram: false
+  long_work_rule: launch visible CLI Debate Room and return to polling loop
+  followup_rule: reply_to_message_id resolves to telegram_room_links before new task classification
+  completion_watch_rule: poll linked rooms without taking Telegram focus away from the gateway
+  completion_followup_rule: status report messages are also linked to the room, so replying to a done/blocked/failed/needs_approval report routes back to the same CLI Debate Room
+  completion_source_rule: CLI Debate Room service synchronizes done/blocked/failed from orchestrator state before Telegram reports it
+  research_followup_rule: reply_to_message_id resolves to telegram_research_links and keeps the same research context
+
+docs:

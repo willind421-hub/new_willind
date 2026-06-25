@@ -1,0 +1,75 @@
+contract: willind.provider_weights_snapshot
+version: 0.1.0
+updated: 2026-05-24
+source_registry: registry/providers/provider-cli-routing.yaml
+state: baseline_no_weekly_benchmark_collected_yet
+
+principle:
+  purpose: Store the current routing weights that weekly benchmark updates may revise.
+  rule: This file records route weights; provider identity and safety policy stay in provider-cli-routing.yaml.
+  approval_required_for:
+    - paid_default_route
+    - external_send_behavior
+    - secret_handling
+    - account_action_behavior
+    - subscription_purchase
+
+providers:
+  willind_ai_rules:
+    weight: 0.78
+    reason: Fast local intent and panel composition path.
+  codex_cli:
+    weight: 0.86
+    reason: Primary implementation and test runner.
+  claude_cli:
+    weight: 0.58
+    reason: Limited subscription; strong for review and architecture.
+  openai_api:
+    weight: 0.62
+    reason: Optional paid API for structured output and fan-out synthesis.
+  gemini_api_or_browser:
+    weight: 0.66
+    reason: Multimodal and video/image research candidate.
+  local_llm:
+    weight: 0.48
+    reason: Private and cheap fallback; quality varies.
+  groq_api:
+    weight: 0.74
+    reason: Fast non-reasoning API; strong for classification, JSON extraction, low-latency judgment.
+  browser_session:
+    weight: 0.52
+    reason: Public research and visual evidence capture.
+  service_supervisor:
+    weight: 0.80
+    reason: Deterministic health and port monitoring.
+  tool_slot_runtime:
+    weight: 0.76
+    reason: Registered tool execution and permission profile checks.
+
+task_overrides:
+  structured_classification:
+    preferred_order: [local_llm, groq_api, openai_api, codex_cli]
+    review_threshold: none
+  coding_implementation:
+    preferred_order: [codex_cli, claude_cli, openai_api]
+    review_threshold: ambiguity_or_high_blast_radius
+  architecture_review:
+    preferred_order: [claude_cli, openai_api, codex_cli]
+    review_threshold: always_compare_when_time_allows
+  visual_ui_research:
+    preferred_order: [gemini_api_or_browser, browser_session, claude_cli, openai_api, codex_cli]
+    review_threshold: visual_reference_or_layout_decision
+  money_opportunity:
+    preferred_order: [browser_session, openai_api, claude_cli, codex_cli, local_llm]
+    review_threshold: before_external_send_or_money_execution
+  monitoring_ops:
+    preferred_order: [service_supervisor, willind_ai_rules, codex_cli, claude_cli]
+    review_threshold: repeated_error_or_recovery_needed
+
+pending_inputs:
+  - public_benchmark
+  - provider_release_note
+  - community_feedback
+  - willind_task_result
+  - cost_quota_log
+  - user_correction_pattern

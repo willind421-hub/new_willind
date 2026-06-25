@@ -1,0 +1,221 @@
+contract: willind.ops_overview_service
+version: 0.1.12
+updated: 2026-06-04
+
+service:
+  id: ops-overview
+  display_name: Willind Ops Overview
+  kind: read_only_operations_overview
+  status: active_available
+  project: ""
+
+purpose: >
+  Provide one read-only dashboard/API view for Usage Tracker,
+  Body Health, Monitor, Action Runtime queue status, provider
+  readiness, MCP runtime state, Deep Research lifecycle status, and CLI Debate
+  Room progress. This is an operator surface, not an executor.
+
+boundaries:
+  read_only: true
+  starts_services: false
+  stops_services: false
+  deletes_files: false
+  reads_secret_files: false
+  executes_external_actions: false
+
+entrypoints:
+  dashboard_backend: "<your-backend>"
+  api_router: "<your-backend>"
+  api_path: /api/ops/overview
+  dashboard_panel: "<your-frontend>"
+
+sources:
+  usage_tracker:
+    registry: registry/services/usage-tracker.yaml
+    health: http://127.0.0.1:18105/health
+    summaries:
+      - http://127.0.0.1:18105/summary?period=today
+      - http://127.0.0.1:18105/summary?period=week
+      - http://127.0.0.1:18105/summary?period=current
+      - http://127.0.0.1:18105/summary?period=all
+    health: http://127.0.0.1:7891/health
+  willind_body_health:
+    registry: registry/services/willind-body-health.yaml
+    latest: runtime/monitor/willind-body-health/latest.json
+  willind_monitor:
+    registry: registry/services/willind-monitor.yaml
+    latest: runtime/monitor/willind-monitor/latest.json
+  action_runtime:
+    registry_note: registry/skills/skill-hub.yaml
+    local_service: "<your-backend>"
+    reads:
+      - recent_action_jobs
+      - pending_approval_requests
+      - runtime_guard_summary
+  mode_runner:
+    registry: registry/services/mode-runner.yaml
+    local_service: "<your-backend>"
+    reads:
+      - known_mode_specs
+      - latest_mode_runner_plan_job
+      - mode_permission_buckets
+  provider_probe:
+    registry: registry/services/provider-probe.yaml
+    api: /api/providers/probes
+    reads:
+      - provider_cli_routing
+      - skill_provider_routing
+      - provider_bootstrap
+  mcp_runtime_state:
+    registry: registry/services/mcp-runtime-state.yaml
+    api: /api/mcp-runtime/state
+    reads:
+      - mcp_http_health
+      - mcp_websocket_port
+      - mcp_db_schema_counts
+      - mcp_tool_names
+  deep_research:
+    registry: registry/services/deep-research.yaml
+    api: /api/deep-research/jobs
+    reads:
+      - queued_running_done_blocked_cancelled_counts
+      - latest_job_preview
+      - memory_candidate_counts
+      - event_counts
+  external_send_preflight:
+    registry: registry/services/external-send-preflight.yaml
+    local_service: "<your-backend>"
+    audit_glob: runtime/traces/external-send-preflight/*.json
+    reads:
+      - redacted_audit_metadata
+      - recent_decision_counts
+      - sensitivity_counts
+      - latest_surface_and_decision
+    reads_preview_text: false
+    reads_attachment_contents: false
+    executes_external_send: false
+  memory_productization:
+    registry: registry/services/memory-productization.yaml
+    local_service: "<your-backend>"
+    reads:
+      - total_memory_count
+      - pinned_count
+      - archived_count
+      - session_count
+      - type_counts_metadata_only
+    reads_memory_content: false
+  cli_debate_rooms:
+    local_service: "<your-backend>"
+    reads:
+      - room_status_counts
+      - active_room_previews
+      - attention_room_previews
+      - latest_room_preview
+      - headless_orchestrator_observed_state
+    controls_rooms: false
+
+display:
+  primary_counts:
+    - normal_services
+    - confirm_or_attention_services
+    - down_or_error_services
+  action_runtime:
+    labels:
+      queued: 대기
+      needs_approval: 승인 필요
+      blocked: 차단
+      failed: 실패
+    user_surface: 운영 계기판
+  usage_periods:
+    - today
+    - current
+    - week
+    - all
+  usage_surface:
+    user_surface: 운영 계기판
+    summary_rows:
+      - 오늘
+      - 초기화 기준
+      - 이번 주
+      - 전체 누적
+    compact_bar_basis: local_subscription_quota_percent_when_available
+    official_quota_surface: current_period_row
+    hides_debug_counters_by_default: true
+    raw_usage_owner: usage-tracker
+  service_surface:
+    user_surface: 운영 계기판
+    visible_rows: all_registered_sources
+    hidden_by_default: false
+    labels_are_compact_korean: true
+  next_actions:
+    count_source: all_attention_services
+    truncated_in_api: false
+  window_director:
+    consumer: "<your-frontend>"
+    opens_workspace_when_attention_exists: true
+    focus_rules:
+      stopped_or_attention_service: devOpsTools
+      usage_error: provider
+      active_usage: provider
+    companion_panels:
+      - anomaly
+      - logsLive
+      - devOpsTools
+    reason_label: 운영 계기판 live 상태
+  deep_research:
+    labels:
+      queued: 대기
+      running: 진행 중
+      done: 완료
+      blocked: 막힘
+      cancelled: 취소됨
+    user_surface: 운영 계기판
+    result_bodies_visible_here: false
+  memory_productization:
+    labels:
+      total_memories: 기억
+      active: 사용중
+      pinned: 핀
+      archived: 보관
+      session_count: 세션
+    user_surface: 운영 계기판
+    memory_bodies_visible_here: false
+  external_send_preflight:
+    labels:
+      total: 최근
+      needs_approval: 승인 필요
+      blocked: 차단
+      trace_passed: 기록 통과
+      attention: 확인
+    user_surface: 운영 계기판
+    preview_text_visible_here: false
+    attachment_contents_visible_here: false
+    external_send_execution_from_overview: false
+  cli_debate_rooms:
+    labels:
+      draft: 준비
+      active: 진행 중
+      paused: 일시정지
+      blocked: 막힘
+      done: 완료
+      archived: 보관
+      failed: 실패
+    user_surface: 운영 계기판
+    launches_or_controls_rooms: false
+    focus_transfer_to_cli: false
+  mode_runner:
+    labels:
+      queued: 안전 후보
+      needs_approval: 승인 필요
+      blocked: 차단
+    user_surface: 운영 계기판
+    action_execution_from_overview: false
+  labels_are_user_facing_korean: true
+
+tests: []
+
+notes:
+  - If an upstream service is stopped, the overview must report down/unavailable
+    instead of trying to start it.
+  - This service lets the user see whether the system is alive without opening
+    each terminal or log file.

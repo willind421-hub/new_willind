@@ -1,0 +1,5 @@
+contract: willind.model_manual_overrides
+version: 0.1.0
+global_pin: null
+task_pins: {}
+allow_paid: false

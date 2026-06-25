@@ -1,0 +1,67 @@
+contract: willind.mcp_runtime_state_service
+version: 0.1.4
+updated: 2026-06-04
+
+service:
+  id: mcp-runtime-state
+  display_name: Willind MCP Runtime State
+  kind: read_only_mcp_runtime_state
+  status: active_available
+  project: "<your-backend>"
+
+purpose: >
+  Expose the current willind-mcp HTTP health, WebSocket state, canonical DB
+  file state, schema/count summary, and registered MCP tool names without
+  reading message bodies or secret values. It can also record local desired
+  control state such as tool enable/disable intent or reconnect request.
+
+boundaries:
+  read_only: true
+  starts_services: false
+  stops_services: false
+  mutates_db: false
+  writes_local_control_state: true
+  executes_mcp_tools: false
+  reads_message_bodies: false
+  reads_secret_files: false
+  reads_env_values: false
+  db_schema_and_counts_only: true
+  partial_db_summary_on_extension_missing: true
+
+entrypoints:
+  dashboard_backend_service: "<your-backend>"
+  api_router: "<your-backend>"
+  api_paths:
+    - /api/mcp-runtime/state
+    - /api/mcp-runtime/control
+    - /api/action-runtime/actions/request_mcp_service_control
+  ops_overview_surface: /api/ops/overview
+  control_state: runtime/mcp-runtime/control-state.json
+  action_runtime_candidate: "<your-backend>"
+
+runtime_sources:
+  mcp_project: "<your-mcp-project>"
+  health_url: http://127.0.0.1:3100/health
+  websocket_url: ws://127.0.0.1:3101
+  canonical_db: "<your-mcp-project>/willind.db"
+  mcp_tools_source: "<your-mcp-project>/src/mcp/server.ts"
+
+status_labels:
+  healthy: 정상
+  degraded: 확인 필요
+  missing: 없음
+  unavailable: 응답 없음
+
+tests: []
+
+notes:
+  - This service does not replace willind-mcp.
+  - Control writes are intent/state records only; service restart and real MCP execution stay behind later gated executors.
+  - request_mcp_service_control records an approved or approval-pending Action Runtime job and does not mutate PM2, service processes, or MCP tools.
+  - It makes MCP state visible to Dashboard/API Hub surfaces.
+  - If optional SQLite virtual-table extensions such as vec0 are unavailable,
+    normal table schema/count summaries still remain visible and the affected
+    virtual tables are reported as degraded partial summaries.
+  - A vec0-only virtual table summary failure is surfaced as a warning/partial
+    DB summary, not as a top-level MCP runtime failure, when HTTP, WebSocket,
+    source, tools, and normal DB summaries remain available.

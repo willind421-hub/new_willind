@@ -1,0 +1,89 @@
+id: bounded-experiment-loop
+version: 0.1.0
+status: active_contract
+purpose: >
+  Run or prepare fixed-budget improvement experiments where a target, metric,
+  budget, stop condition, and keep/discard record are explicit before any
+  execution starts.
+when_to_use:
+  - fixed_budget_code_or_model_experiment
+  - repeated_candidate_improvement
+  - metric_based_keep_or_discard_loop
+  - overnight_or_long_running_experiment_planning
+  - benchmark_then_improve_workflow
+when_not_to_use:
+  - plain_public_web_research
+  - one_shot_market_research
+  - broad_business_strategy_without_experiment_target
+  - payment_or_external_send
+  - unbounded_provider_loop
+input_contract:
+  required:
+    - goal
+    - target_scope
+    - metric
+    - budget_or_timebox
+    - stop_condition
+  optional:
+    - candidate_generation_rule
+    - baseline_result
+    - allowed_workspace
+    - rollback_or_discard_rule
+output_contract:
+  required:
+    - experiment_plan_or_attempt_summary
+    - metric_result
+    - keep_discard_defer_decision
+    - trace_location
+  optional:
+    - next_candidate
+    - failure_reason
+    - cost_or_runtime_estimate
+hook_timing:
+  - intent_detected
+  - pre_model
+  - pre_tool
+  - post_tool
+  - error
+  - shutdown_archive
+permission_tier:
+  default: T2_trace_required
+  auto_allowed:
+    - observation
+    - proposal
+    - draft
+    - experiment_plan
+  requires_confirmation:
+    - long_running_loop
+    - paid_provider_repetition
+    - project_file_write
+    - browser_login_session
+    - service_restart
+  blocked_without_explicit_approval:
+    - payment
+    - external_send
+    - account_change
+    - secret_read
+    - captcha_bypass
+provider_preferences:
+  primary: codex_cli
+  reviewers:
+    - claude_cli
+  fallback:
+    - local_llm
+    - openai_api
+  notes: >
+    Codex handles local experiment wiring and tests. Claude is useful for
+    judging whether the metric and stop condition make sense. Browser/Gemini
+    may be used only when the experiment needs public references first.
+storage_policy:
+  plans: projects/<project>/docs/planning/experiments
+  traces: runtime/traces
+  logs: runtime/logs
+  generated_workspaces: runtime/generated-workspaces
+tests_or_validation:
+  - metric_and_stop_condition_must_exist_before_execution
+  - no_unbounded_loop
+  - paid_or_long_running_execution_requires_permission_gate
+  - keep_discard_decision_must_include_reason
+

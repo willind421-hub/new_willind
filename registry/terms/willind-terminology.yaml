@@ -1,0 +1,44 @@
+contract: willind.terminology
+version: 0.1.0
+updated: 2026-05-23
+
+canonical_terms:
+  spine:
+    ko: 척추
+    meaning: Registry를 중심으로 Permission Gate, Queue, Workflow, Capability, Reality Link가 붙는 Willind 전체 구조
+    avoid_as_body_terms: [spine, 뼈대, 중심축, backbone]
+    allowed_exceptions: [file_name, path, code_identifier]
+  registry:
+    ko: Registry
+    meaning: 척추의 중심부. 자료, 능력, 현실 대상, 실행 흔적, 권한, 연결 관계를 찾게 해주는 색인과 관계망
+    avoid_as_body_terms: [그냥 목록, 단순 폴더 인덱스]
+  spine_folders:
+    ko: 척추 폴더
+    meaning: 척추를 파일 시스템에서 받쳐주는 최상위 폴더군
+    avoid_as_body_terms: [spine 폴더, 폴더 뼈대]
+  capability:
+    ko: 능력
+    meaning: Willind가 사용할 수 있는 기능 단위
+    avoid_as_body_terms: [skill capability 혼용]
+  source_skill:
+    ko: 스킬 원본
+    meaning: 외부 플러그인이나 스킬의 원본 파일 묶음
+  adapter:
+    ko: 어댑터
+    meaning: 외부 스킬 원본을 Willind 방식으로 감싸는 층
+  composed_capability:
+    ko: 조합 능력
+    meaning: 여러 스킬 원본과 어댑터를 합친 Willind식 능력
+  runtime_trace:
+    ko: 실행 흔적
+    meaning: 로그, trace, 임시 작업장, 테스트 결과
+  reality_object:
+    ko: 현실 대상
+    meaning: 사람, 돈, 학교, 회사, 외주, 프로젝트 같은 실제 세계의 대상
+
+rules:
+  - Registry는 척추의 중심부다.
+  - 전체 구조는 척추로 통일한다.
+  - 폴더 구조는 척추 폴더로 통일한다.
+  - 파일명과 경로의 spine은 변경하지 않는다.
+  - source-chunks와 원문 덤프는 원문 보존 대상이므로 교정하지 않는다.

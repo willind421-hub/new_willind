@@ -1,0 +1,155 @@
+contract: willind.hook_routing
+version: 0.1.0
+updated: 2026-05-25
+
+purpose: >
+  Define when Willind capabilities may influence a session. This file does
+  not execute hooks by itself; it is the registry contract used by routers,
+  CLIs, local services, and future plugin loaders.
+
+global_rules:
+  no_global_full_skill_injection: true
+  deterministic_monitoring_first: true
+  permission_gate_always_wins: true
+  secret_policy_always_wins: true
+  load_summaries_before_full_sources: true
+  imported_sources_are_never_direct_runtime_policy: true
+
+timings:
+  source_intake:
+    purpose: Store original source metadata, create or update registry entry, scan risk, and suggest Willind adapter/capability targets.
+    legacy_aliases: [install_import]
+    may_execute_tools: false
+    candidates:
+      - capabilities/imported
+
+  session_start:
+    purpose: Load minimal identity, active project, provider budget, and safety policy.
+    load_full_skill_text: false
+    candidates:
+      - core/policies/agent-runtime-guidelines.yaml
+      - registry/providers/provider-cli-routing.yaml
+    forbidden:
+      - injecting_all_imported_skills
+      - provider_specific_roleplay_files
+
+  context_load:
+    purpose: Load the active project/workflow contract only.
+    candidates:
+      - workflows
+      - projects/<project>/docs/planning
+      - capabilities/composed
+
+  intent_detected:
+    purpose: Select candidate capability from the user's request.
+    candidates:
+      - capabilities/composed/coding-harness
+      - capabilities/composed/research-to-decision
+      - capabilities/composed/design-review-to-react
+      - capabilities/composed/agent-debate-room
+      - capabilities/composed/project-start-workflow
+      - capabilities/composed/operations-guidance
+    output_required:
+      - intent
+      - candidate_capabilities
+      - risk_tier
+      - provider_route_hint
+
+  pre_model:
+    purpose: Add only the small capability summary, tone policy, and constraints needed for this turn.
+    load_full_skill_text: false
+    candidates:
+      - capabilities/composed
+      - capabilities/adapters
+      - core/policies
+    forbidden:
+      - dumping_large_skill_docs
+      - loading_unrelated_persona_rules
+
+  post_model:
+    purpose: Validate the model answer and tool-call candidates against contracts.
+    candidates:
+      - registry/tools/tool-slot-index.yaml
+      - core/policies
+    output_required:
+      - accepted_actions
+      - rejected_actions
+      - reason
+
+  pre_tool:
+    purpose: Run permission, path, dry-run, and secret checks before any action.
+    safety_gate_required: true
+    candidates:
+      - registry/files/file-routing-policy.yaml
+      - registry/data/data-catalog.yaml
+      - registry/tools/tool-slot-index.yaml
+      - core/policies
+    blocked_by_default:
+      - payment
+      - account_change
+      - external_send_without_approval
+      - destructive_delete_without_approval
+      - secret_exfiltration
+
+  post_tool:
+    purpose: Record result, trace, failure, and follow-up candidate.
+    candidates:
+      - runtime/logs
+      - runtime/traces
+      - docs/history
+      - docs/chat-log
+
+  error:
+    purpose: Group errors, create recovery candidates, prevent repeated blind retries.
+    candidates:
+      - capabilities/composed/runtime-safety-guidelines
+      - capabilities/composed/test-and-smoke-harness
+
+  scheduled:
+    purpose: Health, cost, signal, provider, and benchmark checks.
+    deterministic_first: true
+    candidates:
+      - registry/providers/provider-cli-routing.yaml
+    ai_escalation_only_when:
+      - anomaly_detected
+      - repeated_failure
+      - high_value_decision_needed
+
+  shutdown_archive:
+    purpose: Separate temporary runtime files from final outputs and reusable references.
+    candidates:
+      - runtime/generated-workspaces
+      - outputs
+      - references
+      - archive
+
+capability_defaults:
+  coding-harness:
+    allowed_timing: [intent_detected, pre_model, post_model, pre_tool, post_tool, error]
+    provider_hint: codex_primary_review_optional
+    risk_ceiling_without_approval: T2
+
+  research-to-decision:
+    allowed_timing: [intent_detected, pre_model, post_tool, scheduled]
+    provider_hint: browser_or_multimodal_first
+    risk_ceiling_without_approval: T1
+
+  design-review-to-react:
+    allowed_timing: [intent_detected, pre_model, post_tool]
+    provider_hint: multimodal_research_then_codex
+    risk_ceiling_without_approval: T2
+
+  agent-debate-room:
+    allowed_timing: [intent_detected, context_load, post_model, post_tool]
+    provider_hint: multi_cli_debate_when_useful
+    risk_ceiling_without_approval: T2
+
+  runtime-safety-guidelines:
+    allowed_timing: [session_start, pre_tool, post_tool, error, scheduled]
+    provider_hint: deterministic_first
+    risk_ceiling_without_approval: T2
+
+  agent-safety-gate:
+    allowed_timing: [pre_tool, post_tool, error]
+    provider_hint: local_policy_then_review
+    risk_ceiling_without_approval: T1

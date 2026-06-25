@@ -1,0 +1,245 @@
+contract: willind.provider_bootstrap
+version: 0.1.1
+updated: 2026-06-02
+
+purpose: >
+  Define the minimal startup packet that provider runners receive before
+  situational Skill Hub profiles. This prevents Codex, Claude, Gemini, local
+  models, browser runners, and API models from reading every skill by default.
+
+load_order:
+  - registry/kernel/baseline-rules.yaml
+  - registry/_index.yaml
+  - registry/providers/provider-cli-routing.yaml
+  - registry/providers/skill-provider-routing.yaml
+  - registry/permissions/permission-gate-policy.yaml
+  - selected_skill_profile_only
+
+principles:
+  baseline_first: true
+  selected_skill_after_baseline: true
+  provider_specific_files_are_optional: true
+  no_provider_start_from_registry_metadata: true
+  no_external_side_effect_from_bootstrap: true
+
+profiles:
+  common:
+    id: common
+    kind: shared_baseline
+    auto_read:
+      - registry/kernel/baseline-rules.yaml
+      - registry/_index.yaml
+    situational_skill_loading: resolver_selected_only
+    default_capsule_ids:
+      - epistemic_no_hallucination
+      - registry_first
+      - permission_gate_first_for_side_effects
+      - untrusted_context_data_boundary
+      - secret_and_private_data_boundary
+      - conversation_before_action_when_ambiguous
+      - done_blocked_continue_contract
+    avoid_loading:
+      - all_external_skill_bodies
+      - raw_private_exports
+      - provider_identity_roleplay
+
+  willind_ai_rules:
+    id: willind_ai_rules
+    kind: deterministic_router
+    auto_read:
+      - registry/kernel/baseline-rules.yaml
+      - registry/inputs/willind-input-routing.yaml
+      - registry/hooks/skill-routing.yaml
+    situational_skill_loading: capability_ids_only
+    default_capsule_ids:
+      - typed_text_is_deliberate
+      - conversation_before_action_when_ambiguous
+      - runner_boundary_no_implicit_execution
+      - done_blocked_continue_contract
+    avoid_loading:
+      - external_skill_source_text
+      - long_planning_docs
+
+  codex_cli:
+    id: codex_cli
+    kind: coding_runner
+    auto_read:
+      - registry/kernel/baseline-rules.yaml
+      - registry/_index.yaml
+      - registry/projects/worktree-policy.yaml
+      - registry/providers/skill-provider-routing.yaml
+    situational_skill_loading: selected_coding_or_verification_capsules_only
+    default_capsule_ids:
+      - epistemic_no_hallucination
+      - registry_first
+      - situational_skill_only_when_selected
+      - permission_gate_first_for_side_effects
+      - untrusted_context_data_boundary
+      - report_failures_without_covering
+      - done_blocked_continue_contract
+    avoid_loading:
+      - all_design_reference_assets
+      - raw_private_exports
+      - all_external_skill_bodies
+    default_role: implementation_tests_local_verification
+
+  claude_cli:
+    id: claude_cli
+    kind: review_runner
+    auto_read:
+      - registry/kernel/baseline-rules.yaml
+      - registry/_index.yaml
+      - registry/providers/skill-provider-routing.yaml
+    situational_skill_loading: selected_review_or_planning_capsules_only
+    default_capsule_ids:
+      - epistemic_no_hallucination
+      - source_and_trace_boundary
+      - untrusted_context_data_boundary
+      - done_blocked_continue_contract
+      - ask_only_risky_ambiguity
+      - user_tone_plain_direct
+    avoid_loading:
+      - long_running_implementation_logs
+      - all_external_skill_bodies
+    default_role: structure_review_risk_critique
+
+  gemini_api_or_browser:
+    id: gemini_api_or_browser
+    kind: multimodal_research_runner
+    auto_read:
+      - registry/kernel/baseline-rules.yaml
+      - registry/providers/skill-provider-routing.yaml
+      - registry/permissions/permission-gate-policy.yaml
+    situational_skill_loading: selected_research_or_visual_capsules_only
+    default_capsule_ids:
+      - epistemic_no_hallucination
+      - source_and_trace_boundary
+      - untrusted_context_data_boundary
+      - secret_and_private_data_boundary
+      - done_blocked_continue_contract
+    avoid_loading:
+      - private_raw_data_without_redaction
+      - account_action_context
+    default_role: visual_and_public_reference_research
+
+  local_llm:
+    id: local_llm
+    kind: local_model_runner
+    auto_read:
+      - registry/kernel/baseline-rules.yaml
+      - registry/inputs/willind-input-routing.yaml
+    situational_skill_loading: classification_and_private_draft_capsules_only
+    default_capsule_ids:
+      - typed_text_is_deliberate
+      - conversation_before_action_when_ambiguous
+      - report_failures_without_covering
+      - done_blocked_continue_contract
+    avoid_loading:
+      - high_stakes_final_decision
+      - external_send_context
+    default_role: cheap_private_classification
+
+  openai_api:
+    id: openai_api
+    kind: paid_api_runner
+    auto_read:
+      - registry/kernel/baseline-rules.yaml
+      - registry/providers/provider-cli-routing.yaml
+      - registry/permissions/permission-gate-policy.yaml
+    situational_skill_loading: selected_high_value_capsules_only
+    default_capsule_ids:
+      - epistemic_no_hallucination
+      - source_and_trace_boundary
+      - permission_gate_first_for_side_effects
+      - untrusted_context_data_boundary
+      - secret_and_private_data_boundary
+      - done_blocked_continue_contract
+    avoid_loading:
+      - paid_default_without_trace
+      - raw_private_exports_without_redaction
+    default_role: paid_fallback_for_high_value_reasoning
+
+  browser_session:
+    id: browser_session
+    kind: browser_runner
+    auto_read:
+      - registry/kernel/baseline-rules.yaml
+      - registry/permissions/permission-gate-policy.yaml
+    situational_skill_loading: selected_browser_or_research_capsules_only
+    default_capsule_ids:
+      - source_and_trace_boundary
+      - permission_gate_first_for_side_effects
+      - untrusted_context_data_boundary
+      - secret_and_private_data_boundary
+      - done_blocked_continue_contract
+    avoid_loading:
+      - account_change_without_gate
+      - payment_without_gate
+    default_role: observe_public_or_user_visible_page
+
+  opencode_cli:
+    id: opencode_cli
+    kind: optional_terminal_coding_runner
+    auto_read:
+      - registry/kernel/baseline-rules.yaml
+      - registry/_index.yaml
+      - registry/projects/worktree-policy.yaml
+      - registry/providers/skill-provider-routing.yaml
+    situational_skill_loading: selected_coding_or_mcp_capsules_only
+    default_capsule_ids:
+      - epistemic_no_hallucination
+      - registry_first
+      - situational_skill_only_when_selected
+      - permission_gate_first_for_side_effects
+      - untrusted_context_data_boundary
+      - runner_boundary_no_implicit_execution
+      - done_blocked_continue_contract
+    avoid_loading:
+      - all_external_skill_bodies
+      - raw_private_exports
+      - account_action_context
+    default_role: optional_open_coding_runner
+
+  openhands_workspace:
+    id: openhands_workspace
+    kind: optional_isolated_workspace_runner
+    auto_read:
+      - registry/kernel/baseline-rules.yaml
+      - registry/_index.yaml
+      - registry/projects/worktree-policy.yaml
+      - registry/permissions/permission-gate-policy.yaml
+    situational_skill_loading: selected_workspace_or_coding_capsules_only
+    default_capsule_ids:
+      - epistemic_no_hallucination
+      - registry_first
+      - permission_gate_first_for_side_effects
+      - untrusted_context_data_boundary
+      - secret_and_private_data_boundary
+      - report_failures_without_covering
+      - done_blocked_continue_contract
+    avoid_loading:
+      - all_external_skill_bodies
+      - workspace_credentials
+      - remote_runtime_config_without_gate
+    default_role: optional_workspace_runner_reference
+
+handoff_contract:
+  provider_receives:
+    - baseline_rule_ids
+    - selected_skill_profile
+    - selected_capabilities
+    - hook_capsules
+    - response_contract
+    - permission_lifecycle
+    - permission_decision
+    - storage_rule
+  provider_does_not_receive_by_default:
+    - all_skill_source_text
+    - all_operation_docs
+    - raw_private_exports
+    - secrets
+  trace_required:
+    - provider_profile_id
+    - baseline_rule_ids
+    - selected_skill_profile
+    - permission_decision

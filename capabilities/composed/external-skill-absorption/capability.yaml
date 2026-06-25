@@ -1,0 +1,112 @@
+id: external-skill-absorption
+version: 0.1.0
+status: active_contract
+purpose: >
+  Classify an external skill/plugin/source by its actual structure and behavior
+  before mapping it into Willind imported, adapter, composed, provider, hook,
+  permission, and storage registries.
+when_to_use:
+  - importing_external_skill_or_plugin
+  - reviewing_skill_source_before_registry_mapping
+  - correcting_name_based_misclassification
+  - deciding_adapter_or_composed_capability_boundary
+when_not_to_use:
+  - normal_user_research_request
+  - direct_code_fix_without_external_skill_source
+  - final_output_generation
+input_contract:
+  required:
+    - source_name_or_path
+    - source_summary
+  optional:
+    - repo_url
+    - files_seen
+    - runtime_shape
+    - permission_surface
+output_contract:
+  required:
+    - source_kind
+    - runtime_shape
+    - live_behavior_risk
+    - imported_target
+    - adapter_target
+    - composed_target
+    - provider_policy
+    - hook_timing
+    - storage_rule
+  optional:
+    - reject_reason
+    - later_review_trigger
+classification_axes:
+  source_kind:
+    - instruction_card
+    - coding_methodology
+    - agent_loop
+    - experiment_loop
+    - app_connector
+    - mcp_server
+    - local_tool
+    - design_asset_or_reference
+    - dataset_or_model
+    - safety_policy
+  runtime_shape:
+    - docs_only
+    - script
+    - cli
+    - package
+    - server
+    - notebook
+    - workflow
+    - browser_or_app_connector
+  live_behavior_risk:
+    - metadata_only
+    - read_only
+    - local_write
+    - local_execute
+    - network_read
+    - external_send
+    - account_change
+    - payment
+hook_timing:
+  - install_import
+  - intent_detected
+  - context_load
+  - pre_model
+  - pre_tool
+  - post_tool
+  - error
+permission_tier:
+  default: T1_research
+  auto_allowed:
+    - source_shape_classification
+    - adapter_plan
+    - registry_metadata_draft
+  requires_confirmation:
+    - importing_large_source
+    - enabling_runtime_behavior
+    - changing_provider_loading_policy
+  blocked_without_explicit_approval:
+    - editing_imported_source
+    - reading_secrets
+    - enabling_external_side_effects
+provider_preferences:
+  primary: codex_cli
+  reviewers:
+    - claude_cli
+  fallback:
+    - browser_session
+    - openai_api
+  notes: >
+    Codex is preferred for repository shape inspection. Claude is preferred for
+    reviewing whether the classification is conceptually correct.
+storage_policy:
+  source_inventory: registry/skills/skill-source-inventory.yaml
+  adapter_registry: registry/skills/external-skill-import-adapt.yaml
+  composed_registry: registry/hooks/skill-routing.yaml
+  skill_hub: registry/skills/skill-hub.yaml
+tests_or_validation:
+  - source_name_must_not_decide_classification_alone
+  - imported_source_must_remain_unmodified
+  - adapter_and_composed_targets_must_exist_or_be_marked_planned
+  - dangerous_live_behavior_must_route_to_permission_gate
+

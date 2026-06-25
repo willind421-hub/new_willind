@@ -1,0 +1,74 @@
+contract: willind.deep_research_service
+version: 0.1.3
+updated: 2026-06-03
+
+service:
+  id: deep-research
+  display_name: Willind Deep Research
+  kind: local_research_lifecycle
+  status: active_available
+  project: ""
+
+purpose: >
+  Turn a research request into a local lifecycle record: plan, safe read
+  provider results, untrusted context messages, synthesis summary, and memory
+  candidates. Jobs can be cancelled, archived, restored, listed as a result
+  library, and exposed as an event stream. This is not an autonomous external
+  sender.
+
+boundaries:
+  read_only_sources: true
+  writes_runtime_job_files: true
+  writes_memory_directly: false
+  memory_store_status: candidate_only
+  supports_cancel: true
+  supports_archive_restore: true
+  supports_event_stream: true
+  supports_retry: true
+  supports_stale_running_guard: true
+  external_send: blocked
+  mutation: blocked
+  payment: blocked
+  account_change: blocked
+
+entrypoints:
+  dashboard_backend_service: "<your-backend>"
+  api_router: "<your-backend>"
+  api_paths:
+    - /api/deep-research/jobs
+    - /api/deep-research/jobs/{job_id}
+    - /api/deep-research/jobs/{job_id}/run
+    - /api/deep-research/jobs/{job_id}/start
+    - /api/deep-research/jobs/{job_id}/retry
+    - /api/deep-research/jobs/{job_id}/cancel
+    - /api/deep-research/jobs/{job_id}/archive
+    - /api/deep-research/jobs/{job_id}/restore
+    - /api/deep-research/jobs/{job_id}/events
+    - /api/deep-research/stale-running/mark-blocked
+    - /api/deep-research/results
+  ops_overview_surface: /api/ops/overview
+
+storage:
+  runtime_jobs: runtime/research/deep-research
+  final_outputs: outputs
+  memory_candidates: returned_in_job_payload
+  memory_store_api: /api/memory/store
+
+uses:
+  search_plan: "<your-backend>"
+  untrusted_context: "<your-backend>"
+  memory_candidate_boundary: "<your-backend>"
+
+tests:
+  - scripts/operations/security/verify_deep_research_contract.py
+  - scripts/operations/security/test_deep_research_contract.py
+
+notes:
+  - Retrieved content remains untrusted data.
+  - Memory candidates require an explicit later store step.
+  - SSE event stream exposes job events and state only; it does not execute external sends.
+  - The start endpoint schedules the existing run path as a background task and records a worker_start_requested event.
+  - The retry endpoint can re-queue blocked or cancelled jobs and then uses the same background run path.
+  - Worker policy records max attempts, attempt count, retry state, and retry events in each job file.
+  - Stale running guard can mark old running jobs as blocked so they do not stay active forever.
+  - Ops Overview reads compact job counts and latest job preview only; result bodies stay out of the operator summary.

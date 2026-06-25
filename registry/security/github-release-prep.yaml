@@ -1,0 +1,83 @@
+contract: willind.security.github_release_prep
+version: 0.1.0
+updated: 2026-05-26
+
+purpose: >
+  Define the pre-GitHub release security and deploy-readiness checks for
+  Willind without reading candidate secret contents or changing repository
+  history.
+
+
+cli:
+  path: scripts/operations/security/github_release_prep_check.py
+  test: scripts/operations/security/test_github_release_prep_check.py
+  default_command: python scripts/operations/security/github_release_prep_check.py --root C:\willind
+  json_command: python scripts/operations/security/github_release_prep_check.py --root C:\willind --format json
+
+data_access_rules:
+  read_candidate_secret_contents: false
+  read_path_metadata: true
+  read_file_sizes: true
+  read_gitignore: true
+  read_git_path_metadata: true
+  execute_history_rewrite: false
+  delete_files: false
+  external_send: false
+  account_change: false
+  payment: false
+
+release_risk_categories:
+  secret_names:
+    examples:
+      - .env
+      - .env.*
+      - .secrets/
+      - '*token*.json'
+      - '*secret*.json'
+      - '*credential*.json'
+      - client_secret*.json
+      - .npmrc
+  private_key_names:
+    examples:
+      - id_rsa
+      - id_ed25519
+      - '*.pem'
+      - '*.key'
+      - '*.p12'
+      - '*.pfx'
+  databases:
+    examples:
+      - '*.db'
+      - '*.sqlite'
+      - '*.sqlite3'
+      - '*.duckdb'
+  large_models:
+    examples:
+      - models/
+      - '*.gguf'
+      - '*.safetensors'
+      - '*.pt'
+      - '*.pth'
+      - '*.onnx'
+  browser_profiles:
+    examples:
+      - .browser-profiles/
+      - browser-profiles/
+      - chrome-user-data/
+      - user-data-dir/
+  dependency_caches:
+    examples:
+      - node_modules/
+      - .venv/
+      - venv/
+      - __pypackages__/
+  runtime_inputs_and_traces:
+    examples:
+      - uploads/
+      - logs/
+      - '*.log'
+
+status_contract:
+  ok: no release-risk path metadata found
+  warn: manual review is required
+  fail: remove, relocate, or rotate before public release

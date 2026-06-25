@@ -1,0 +1,36 @@
+contract: willind.scheduler_comparison_service
+version: 0.1.0
+updated: 2026-06-02
+
+purpose: >
+  Expose a read-only comparison between an external task-scheduling pattern and
+  Willind's existing schedule DB, async scheduler loop, cron jobs, and
+  time actions. This prevents duplicate scheduler engines.
+
+api:
+  backend:
+    - /api/scheduler/comparison
+
+owner:
+  project: "<your-backend>"
+  service: ""
+  router: ""
+
+decision:
+  create_new_scheduler_engine: false
+  canonical_direction: reuse_existing_croncreate_stack
+  reason: >
+    Willind already owns scheduling through schedule DB routes, async backend
+    scheduler jobs, cron jobs, and add_event/remind_at candidates. An external
+    pattern is used only as a comparison reference, not as a second engine.
+
+permission:
+  read_comparison: safe_read
+  list_jobs: safe_read
+  trigger_job: confirm_or_trace_required
+  create_reminder: trace_required
+  delete_needed_schedule_data: confirm_or_block
+
+tests:
+  - ""
+

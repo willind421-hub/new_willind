@@ -1,0 +1,50 @@
+contract: willind.connector.payment_commerce
+version: 0.1.0
+updated: 2026-06-14
+
+connector:
+  id: payment-commerce
+  display_name: Payment / Commerce
+  kind: payment_and_order_connector
+  priority: P3
+  status: disabled_strong_confirm_only
+  owner_scope: money_and_orders
+
+read:
+  status: planned_disabled
+  permission_required: allow
+  notes: Price, availability, cart page, or order option lookup is allowed.
+draft:
+  status: planned_disabled
+  permission_required: allow
+  notes: Purchase candidates and checkout previews can be prepared.
+write:
+  status: planned_disabled
+  permission_required: trace_required
+  notes: Add-to-cart or reservation hold may be allowed with trace only.
+send:
+  status: planned_disabled
+  permission_required: strong_confirm
+  notes: Order confirmation is a payment boundary.
+delete:
+  status: planned_disabled
+  permission_required: confirm_or_block
+  notes: Canceling orders or deleting account-visible records is gated.
+payment:
+  status: disabled_strong_confirm_only
+  permission_required: strong_confirm
+  notes: Final payment, subscription, transfer, or trade needs explicit strong confirmation.
+
+secret_env_names:
+  - STRIPE_API_KEY
+  - PAYPAL_CLIENT_ID
+  - PAYPAL_CLIENT_SECRET
+  - COMMERCE_API_KEY
+
+permission_required:
+  read: allow
+  draft: allow
+  write: trace_required
+  send: strong_confirm
+  delete: confirm_or_block
+  payment: strong_confirm

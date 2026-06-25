@@ -1,0 +1,1662 @@
+{
+  "generated_at": "2026-05-03",
+  "total_endpoints": 177,
+  "by_level": {
+    "0": 87,
+    "1": 0,
+    "2": 58,
+    "3": 10,
+    "4": 22
+  },
+  "by_default_policy": {
+    "auto": 148,
+    "confirm": 29,
+    "deny": 0
+  },
+  "routers": {
+    "action.py": {
+      "prefix": "/api/action",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/action/ws-status",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action/briefing",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "action_runtime.py": {
+      "prefix": "/api/action-runtime",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/action-runtime/actions/preflight_external_send_candidate",
+          "level": 2,
+          "tags": [
+            "write",
+            "external_send_preflight",
+            "permission_review"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action-runtime/actions/request_service_cron_change",
+          "level": 3,
+          "tags": [
+            "system",
+            "execute",
+            "service_cron"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action-runtime/actions/request_mcp_service_control",
+          "level": 3,
+          "tags": [
+            "system",
+            "execute",
+            "mcp_runtime",
+            "service_control"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "POST",
+          "path": "/api/action-runtime/actions/upload_to_gdrive",
+          "level": 3,
+          "tags": [
+            "external_send",
+            "upload",
+            "gdrive"
+          ],
+          "default_policy": "confirm"
+        }
+      ]
+    },
+    "backlog.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/backlog",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "classification.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/classify/test",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/classify/rule-only",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/classify",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/routing/{routing_id}/execute",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/routing/{routing_id}/cancel",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/classify/feedback",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/routing/log",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "roles.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/roles",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/roles/stats",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/depts/health",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "design.py": {
+      "prefix": "/api/design",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/design/generate",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/design/generate-image",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/design/images/{filename}",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "files.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/upload",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/files/{filename}",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/file",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "filesystem.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/fs/list",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/fs/read",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/fs/write",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/fs/mkdir",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "gcal.py": {
+      "prefix": "/api/gcal",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/gcal/test",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/gcal/events",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/gcal/calendars",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/gcal/holidays",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/gcal/events",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/gcal/events/{event_id}",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/gcal/events/{event_id}",
+          "level": 4,
+          "tags": [
+            "delete"
+          ],
+          "default_policy": "confirm"
+        }
+      ]
+    },
+    "gdrive.py": {
+      "prefix": "/api/gdrive",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/gdrive/test",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/gdrive/files",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/gdrive/files/{file_id}",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/gdrive/download/{file_id}",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "jarvis.py": {
+      "prefix": "/api/jarvis",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/jarvis/expand",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/jarvis/graph",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/jarvis/action",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/jarvis/search",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "local_projects.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/local-projects/scan",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "logs.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/logs",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/logs/services",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "market.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/market/indices",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "memory.py": {
+      "prefix": "/api/memory",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/memory/store",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/memory/search",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/memory/{memory_id}",
+          "level": 4,
+          "tags": [
+            "delete"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "GET",
+          "path": "/api/memory/stats",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "messages.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/messages/unread",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/messages/mark-read/{dept}",
+          "level": 3,
+          "tags": [
+            "send",
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/messages/search",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/messages/project/{project}",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/messages/{dept}",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/messages",
+          "level": 3,
+          "tags": [
+            "send",
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/messages/{msg_id}",
+          "level": 4,
+          "tags": [
+            "delete"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/messages-bulk/{dept}",
+          "level": 4,
+          "tags": [
+            "delete"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "POST",
+          "path": "/api/messages-archive/{dept}",
+          "level": 3,
+          "tags": [
+            "delete",
+            "write"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "POST",
+          "path": "/api/messages-archive-ids",
+          "level": 3,
+          "tags": [
+            "delete",
+            "write"
+          ],
+          "default_policy": "confirm"
+        }
+      ]
+    },
+    "news.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/news/debug",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/news/articles",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/news/shocking",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/news/stats",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/news/clusters",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/news/clusters/{cluster_id}",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/news/simulations",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/news/simulations/{sim_id}",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "ollama.py": {
+      "prefix": "/api/ollama",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/ollama/status",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/ollama/chat",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/ollama/summarize",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/ollama/translate",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/ollama/classify",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "pc_router.py": {
+      "prefix": "/pc",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/pc/run",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/pc/kill",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/pc/type",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/pc/hotkey",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/pc/open-url",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/pc/open-path",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/pc/obsidian/open",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/pc/obsidian/search",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/pc/volume",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "pm2_status.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/pm2/status",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "permission.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/permission/external-send-preflight",
+          "level": 2,
+          "tags": [
+            "write",
+            "external_send",
+            "preflight"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "preferences.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/preferences",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/preferences/{key}",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "PUT",
+          "path": "/api/preferences/{key}",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "projects.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/projects",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/projects/scan",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "proxy.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/proxy-list",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "push.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/push/vapid-public-key",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/push/subscribe",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/push/unsubscribe",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/push/test",
+          "level": 3,
+          "tags": [
+            "send"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "GET",
+          "path": "/api/push/list",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "remote_fs.py": {
+      "prefix": "/api/remote",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/remote/fs/list",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/remote/hosts",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "schedule.py": {
+      "prefix": "/api/schedule",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/schedule/{item_id}/toggle",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/schedule/{item_id}",
+          "level": 4,
+          "tags": [
+            "delete"
+          ],
+          "default_policy": "confirm"
+        }
+      ]
+    },
+    "scheduler.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/scheduler/jobs",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/scheduler/trigger/{name}",
+          "level": 3,
+          "tags": [
+            "execute"
+          ],
+          "default_policy": "confirm"
+        }
+      ]
+    },
+    "search.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/search",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/youtube/search",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/youtube/play",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "shared.py": {
+      "prefix": "/api/shared",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/shared/set",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/shared/get/{key:path}",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/shared/list",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/shared/del/{key:path}",
+          "level": 4,
+          "tags": [
+            "delete"
+          ],
+          "default_policy": "confirm"
+        }
+      ]
+    },
+    "study.py": {
+      "prefix": "/api/study",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/study/notebooks",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/study/notebooks",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/study/notebooks/{nb_id}",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/study/notebooks/{nb_id}",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/study/notebooks/{nb_id}",
+          "level": 4,
+          "tags": [
+            "delete"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "POST",
+          "path": "/api/study/notebooks/{nb_id}/materials",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/study/notebooks/{nb_id}/materials",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/study/materials/{mat_id}",
+          "level": 4,
+          "tags": [
+            "delete"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "GET",
+          "path": "/api/study/materials/{mat_id}",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/study/materials/{mat_id}/file",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/study/notebooks/{nb_id}/context",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/study/notebooks/{nb_id}/tools",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/study/notebooks/{nb_id}/tools",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/study/tools/{tr_id}",
+          "level": 4,
+          "tags": [
+            "delete"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "POST",
+          "path": "/api/study/notebooks/{nb_id}/chat",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/study/notebooks/{nb_id}/chat",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/study/notebooks/{nb_id}/chat",
+          "level": 4,
+          "tags": [
+            "delete"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/study/chat/{msg_id}",
+          "level": 4,
+          "tags": [
+            "delete"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "GET",
+          "path": "/api/study/notebooks/{nb_id}/chat/search",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "summary.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/summary/today",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "system.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/system/stats",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/system/db-stats",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "telegram.py": {
+      "prefix": "/telegram",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/telegram/channels",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/telegram/channels/sync",
+          "level": 4,
+          "tags": [
+            "send"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "POST",
+          "path": "/telegram/channels/{channel_id}/toggle",
+          "level": 4,
+          "tags": [
+            "send"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "POST",
+          "path": "/telegram/channels/{channel_id}/collect",
+          "level": 4,
+          "tags": [
+            "send"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "POST",
+          "path": "/telegram/collect",
+          "level": 4,
+          "tags": [
+            "send"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "GET",
+          "path": "/telegram/messages/{channel_id}",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "topics.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/topics",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/topics/{topic}/messages",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/topics/{topic}/messages",
+          "level": 3,
+          "tags": [
+            "send",
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/topics/{topic}",
+          "level": 4,
+          "tags": [
+            "delete"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "POST",
+          "path": "/api/topics/{topic}/summary",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "trading.py": {
+      "prefix": "/api/trading",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/trading/bot/status",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/trading/parse",
+          "level": 4,
+          "tags": [
+            "money"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "GET",
+          "path": "/api/trading/stats",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/api/trading/trades",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "transcript.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/transcript",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "tts_router.py": {
+      "prefix": "",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/tts/generate",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "twofa.py": {
+      "prefix": "/auth/2fa",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/auth/2fa/status",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "GET",
+          "path": "/auth/2fa/setup",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/2fa/activate",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/2fa/regenerate-backup-codes",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/auth/2fa/disable",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "voice.py": {
+      "prefix": "/api",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/voice/transcribe",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/voice/wakeword",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/voice/enroll",
+          "level": 3,
+          "tags": [
+            "system",
+            "write"
+          ],
+          "default_policy": "confirm"
+        },
+        {
+          "method": "GET",
+          "path": "/api/voice/enroll/status",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    },
+    "wiki.py": {
+      "prefix": "/api/wiki",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/wiki/raw-list",
+          "level": 0,
+          "tags": [
+            "read"
+          ],
+          "default_policy": "auto"
+        },
+        {
+          "method": "POST",
+          "path": "/api/wiki/process-raw",
+          "level": 2,
+          "tags": [
+            "write"
+          ],
+          "default_policy": "auto"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,62 @@
+contract: willind.body_health_service
+version: 0.1.0
+updated: 2026-05-30
+
+service:
+  id: willind-body-health
+  display_name: Willind Body Health
+  kind: deterministic_body_health_probe
+  status: active_available
+  owner_scope: Monitor/Registry/Runtime
+
+definition: >
+  Willind Body Health is a read-only probe for the living system, not a model
+  quality benchmark. It checks whether the main services are reachable, typed
+  conversation stays separate from work execution, risky requests still cross
+  the Permission Gate, the MCP canonical database is readable, and a recent
+  backup contains that database.
+
+metrics:
+  service_reachability:
+    checks:
+      required:
+        - dashboard_backend
+        - dashboard_frontend
+      optional:
+        - mcp_health
+  entry_routing_quality:
+    samples:
+      - greeting must stay conversation
+      - light choice must stay conversation
+      - explicit research request must become workflow
+  permission_boundary:
+    samples:
+      - purchase request must need approval or block
+      - delete request must need approval or block
+  mcp_db_integrity:
+    canonical_db: ""
+    expected_tables:
+      - interactions
+      - messages
+      - permission_audit_log
+  backup_freshness:
+    manifest_root: ""
+    max_age_hours: 30
+    must_include: []
+  error_pressure:
+    source: runtime/monitor/willind-monitor/latest.json
+    high_severity_threshold: 80
+
+boundaries:
+  read_only: true
+  starts_services: false
+  stops_services: false
+  deletes_files: false
+  reads_secret_files: false
+  executes_external_actions: false
+
+entrypoints:
+  runner: python scripts/operations/monitor/willind_body_health.py --json
+  latest: runtime/monitor/willind-body-health/latest.json
+
+docs:
